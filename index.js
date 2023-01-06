@@ -41,6 +41,7 @@ const GITHUB_TOKEN = process.env.GITHUB_TOKEN || (await inquirer.prompt([
 
 const { response: resCollaborations, responseBody: collaboratorList } = await getCollaborations(CIRCLE_V2_API, CIRCLE_TOKEN);
 if (resCollaborations.status !== 200) exitWithError('Failed to get collaborations with the following error:\n', resultsJSON);
+else if (collaboratorList.length === 0) exitWithError('There are no organizations of which you are a member or a collaborator', collaboratorList);
 
 const answers = await inquirer.prompt([
   {
