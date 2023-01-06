@@ -1,7 +1,9 @@
 import inquirer from "inquirer";
-import fetch from "node-fetch";
-let CIRCLE_TOKEN = process.env.CIRCLE_TOKEN || null;
-let GITHUB_TOKEN = process.env.GITHUB_TOKEN || null;
+import { exitWithError, getCollaborations, getContexts, getContextVariables, getRepos, getProjectVariables, resolveVcsSlug } from "./utils.js";
+
+const CIRCLE_V1_API = "https://circleci.com/api/v1.1";
+const CIRCLE_V2_API = "https://circleci.com/api/v2";
+const GITHUB_API = "https://api.github.com";
 
 const USER_DATA = {
   contexts: [],
@@ -9,50 +11,50 @@ const USER_DATA = {
 };
 
 // Enter CircleCI Token if none is set
-if (!CIRCLE_TOKEN) {
-  const CIRCLE_TOKEN_ANSWER = await inquirer.prompt([
-    {
-      message: "Enter your CircleCI API token",
-      type: "password",
-      name: "cci-token",
-    },
-  ]);
-  CIRCLE_TOKEN = CIRCLE_TOKEN_ANSWER["cci-token"];
-}
+const CIRCLE_TOKEN = process.env.CIRCLE_TOKEN || (await inquirer.prompt([
+  {
+    message: "Enter your CircleCI API token",
+    type: "password",
+    name: "cciToken",
+  },
+])).cciToken;
+
+// Select VCS
+const VCS = (await inquirer.prompt([
+  {
+    message: "Select a VCS",
+    type: "list",
+    name: "vcs",
+    choices: [ "GitHub", "Bitbucket", "GitLab" ],
+  }
+])).vcs;
 
 // Enter GitHub Token if none is set
-if (!GITHUB_TOKEN) {
-  const GITHUB_TOKEN_ANSWER = await inquirer.prompt([
-    {
-      message: "Enter your GitHub API token",
-      type: "password",
-      name: "gh-token",
-    },
-  ]);
-  GITHUB_TOKEN = GITHUB_TOKEN_ANSWER["gh-token"];
-}
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN || (await inquirer.prompt([
+  {
+    message: "Enter your GitHub API token",
+    type: "password",
+    name: "ghToken",
+    when: VCS === "GitHub",
+  },
+])).ghToken;
 
-const getCollaborations = async () => {
-  let url = "https://circleci.com/api/v2/me/collaborations";
-  let results = await fetch(url, {
-    headers: { "Circle-Token": `${CIRCLE_TOKEN}` },
-  }).then((res) => res.json());
-  return results;
-};
-
-const collaboratorList = await getCollaborations();
+const { response: resCollaborations, responseBody: collaboratorList } = await getCollaborations(CIRCLE_V2_API, CIRCLE_TOKEN);
+if (resCollaborations.status !== 200) exitWithError('Failed to get collaborations with the following error:\n', resultsJSON);
+else if (collaboratorList.length === 0) exitWithError('There are no organizations of which you are a member or a collaborator', collaboratorList);
 
 const answers = await inquirer.prompt([
   {
     message: "Select an account",
     type: "list",
     name: "account",
-    choices: await collaboratorList.map((collaboration) => collaboration.name),
+    choices: collaboratorList.map((collaboration) => collaboration.name),
   },
   {
     message: "Is this an Organization (Not a User)?",
     type: "confirm",
     name: "isOrg",
+    when: VCS === "GitHub",
   },
 ]);
 
@@ -60,43 +62,24 @@ const accountID = collaboratorList.find(
   (collaboration) => collaboration.name === answers.account
 ).id;
 
-const getContextList = async (ownerID, pageToken, contextItems) => {
-  let url = `https://circleci.com/api/v2/context?owner-id=${ownerID}`;
-  if (pageToken) {
-    url = `${url}&page-token=${pageToken}`;
-  }
-  let items = contextItems || [];
-  let results = await fetch(url, {
-    headers: { "Circle-Token": `${CIRCLE_TOKEN}` },
-  }).then((res) => res.json());
-  items.push(...results.items);
-  if (results.next_page_token) {
-    getContextList(ownerID, results.next_page_token, items);
-  }
+const getPaginatedData = async (api, token, identifier, caller) => {
+  const items = [];
+  let pageToken = "";
+
+  do {
+    const { response, responseBody } = await caller(api, token, identifier, pageToken);
+    if (response.status !== 200) exitWithError('Failed to get data with the following error:\n', responseBody);
+    if (responseBody.items.length > 0) items.push(...responseBody.items);
+    pageToken = responseBody.next_page_token;
+  } while (pageToken);
+
   return items;
-};
+}
 
-const getContextVariables = async (contextID, pageToken, variableItems) => {
-  let url = `https://circleci.com/api/v2/context/${contextID}/environment-variable`;
-  if (pageToken) {
-    url = `${url}?page-token=${pageToken}`;
-  }
-  let items = variableItems || [];
-  let results = await fetch(url, {
-    headers: { "Circle-Token": `${CIRCLE_TOKEN}` },
-  }).then((res) => res.json());
-  items.push(...results.items);
-  if (results.next_page_token) {
-    getContextVariables(contextID, results.next_page_token, items);
-  }
-  return items;
-};
-
-const contextList = await getContextList(accountID);
-
-const contexData = await Promise.all(
+const contextList = await getPaginatedData(CIRCLE_V2_API, CIRCLE_TOKEN, accountID, getContexts);
+const contextData = await Promise.all(
   contextList.map(async (context) => {
-    const variables = await getContextVariables(context.id);
+    const variables = await getPaginatedData(CIRCLE_V2_API, CIRCLE_TOKEN, context.id, getContextVariables);
     return {
       name: context.name,
       id: context.id,
@@ -104,48 +87,43 @@ const contexData = await Promise.all(
     };
   })
 );
-USER_DATA.contexts = contexData;
+USER_DATA.contexts = contextData;
 
-// Fetch Projects Data
-
-const getGitHubRepos = async (pageNumber, data) => {
-  data = data || [];
-  const page = pageNumber || 1;
+const getRepoList = async (api, token, accountID) => {
+  const items = [];
   const slug = answers.isOrg ? "orgs" : "users";
-  const url = `https://api.github.com/${slug}/${answers.account}/repos?per_page=100&page=${page}`;
-  const results = await fetch(url, {
-    headers: { Authorization: `Bearer ${GITHUB_TOKEN}` },
-  }).then(async (res) => {
-    if (res.status === 200) {
-      return res.json();
-    } else if (res.status === 403) {
-      console.log("Auth Error");
-    }
-    console.dir(await res.json());
-    process.exit(1);
-  });
-  if (results)
-    if (results.length === 0) {
-      return data.map((repo) => repo.full_name);
-    }
-  return getGitHubRepos(page + 1, [...results, ...data]);
-};
+  const source = VCS === "GitHub" ? "github" : "circleci";
+  let pageToken = 1;
+  let keepGoing = true;
 
-const repoList = await getGitHubRepos();
+  do {
+    const { response, responseBody } = await getRepos(api, token, slug, accountID, pageToken);
+    if (response.status !== 200) exitWithError('Failed to get repositories with the following error:\n', responseBody);
+
+    const reducer = VCS === "GitHub"
+      ? (acc, curr) => [...acc, curr.full_name]
+      : (acc, curr) => [...acc, `${curr.username}/${curr.reponame}`];
+
+    if (responseBody.length > 0) items.push(...responseBody.reduce(reducer, []));
+    // CircleCI only requires one request to get all repos.
+    if (responseBody.length === 0 || source === "circleci") keepGoing = false;
+    pageToken++;
+  } while (keepGoing);
+
+  return items;
+}
+const repoList = (VCS === "GitHub")
+  ? await getRepoList(GITHUB_API, GITHUB_TOKEN, answers.account)
+  : await getRepoList(CIRCLE_V1_API, CIRCLE_TOKEN, answers.account);
 
 const repoData = await Promise.all(
   repoList.map(async (repo) => {
-    const url = `https://circleci.com/api/v2/project/gh/${repo}/envvar`;
-    const results = await fetch(url, {
-      headers: { "Circle-Token": `${CIRCLE_TOKEN}` },
-    }).then((res) => res.json());
-
-    return {
-      name: repo,
-      variables: results.items,
-    };
+    const vcsSlug = resolveVcsSlug(VCS);
+    const { response, responseBody } = await getProjectVariables(CIRCLE_V2_API, CIRCLE_TOKEN, repo, vcsSlug);
+    if (response.status !== 200 && response.status !== 404) exitWithError('Failed to get project variables with the following error:\n', responseBody);
+    return { name: repo, variables: responseBody.items };
   })
 );
-USER_DATA.projects = repoData.filter((repo) => repo.variables.length > 0);
+USER_DATA.projects = repoData.filter((repo) => repo.variables?.length > 0);
 
 console.dir(USER_DATA, { depth: null });
