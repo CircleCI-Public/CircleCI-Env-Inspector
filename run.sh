@@ -2,6 +2,8 @@
 
 # This script is used to run the application in a docker container.
 echo "Building Docker image..."
-DOCKER_BUILDKIT=1 docker build -t cci-env-inspector .
+docker build -t cci-env-inspector .
 echo "Running Docker image..."
-docker run -it --rm -v ${PWD}:/project cci-env-inspector
+docker run --name my-container -it cci-env-inspector 
+docker cp my-container:circleci-data.json
+docker container rm my-container
