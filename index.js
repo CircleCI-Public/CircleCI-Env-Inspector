@@ -75,7 +75,7 @@ else if (collaboratorList.length === 0)
   );
 
 const filteredAccounts = collaboratorList.filter(account => VCS.toLowerCase() === account['vcs_type'].toLowerCase());
-const accountNames = filteredAccounts.reduce((acc, curr) => [curr, ...acc], [])
+const accountNames = filteredAccounts.reduce((acc, curr) => [curr.name, ...acc], [])
 const answers = await inquirer.prompt([
   {
     message: "Select an account",
