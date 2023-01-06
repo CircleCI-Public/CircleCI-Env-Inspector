@@ -1,4 +1,4 @@
-#!/usr/env/bin bash
+#!/usr/bin/env bash
 
 # This script is used to run the application in a docker container.
 echo "Building Docker image..."
