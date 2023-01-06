@@ -42,7 +42,7 @@ const VCS = (
       message: "Select a VCS",
       type: "list",
       name: "vcs",
-      choices: ["GitHub", "Bitbucket", "GitLab"],
+      choices: ["GitHub", "Bitbucket"],
     },
   ])
 ).vcs;
@@ -74,12 +74,14 @@ else if (collaboratorList.length === 0)
     collaboratorList
   );
 
+const filteredAccounts = collaboratorList.filter(account => VCS.toLowerCase() === account['vcs_type'].toLowerCase());
+const accountNames = filteredAccounts.reduce((acc, curr) => [curr, ...acc], [])
 const answers = await inquirer.prompt([
   {
     message: "Select an account",
     type: "list",
     name: "account",
-    choices: collaboratorList.map((collaboration) => collaboration.name),
+    choices: accountNames,
   },
   {
     message: "Is this an Organization (Not a User)?",
