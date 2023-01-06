@@ -146,6 +146,12 @@ const repoData = await Promise.all(
     };
   })
 );
-USER_DATA.projects = repoData.filter((repo) => repo.variables.length > 0);
+USER_DATA.projects = repoData.filter((repo) => {
+  if (repo && repo.variables) {
+    return repo.variables.length > 0;
+  } else {
+    return false;
+  }
+});
 
 console.dir(USER_DATA, { depth: null });
