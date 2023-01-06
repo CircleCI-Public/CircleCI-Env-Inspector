@@ -1,9 +1,9 @@
 import inquirer from "inquirer";
 import { exitWithError, getCollaborations, getContexts, getContextVariables, getRepos, getProjectVariables, resolveVcsSlug } from "./utils.js";
 
-const CIRCLE_V1_API = "https://circleci.com/api/v1.1";
-const CIRCLE_V2_API = "https://circleci.com/api/v2";
-const GITHUB_API = "https://api.github.com";
+const CIRCLE_V1_API = process.env.CIRCLE_V1_API ?? "https://circleci.com/api/v1.1";
+const CIRCLE_V2_API = process.env.CIRCLE_v2_API ?? "https://circleci.com/api/v2";
+const GITHUB_API    = process.env.GITHUB_API ?? "https://api.github.com";
 
 const USER_DATA = {
   contexts: [],
