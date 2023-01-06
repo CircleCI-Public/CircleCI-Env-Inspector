@@ -91,15 +91,15 @@ USER_DATA.contexts = contextData;
 const getRepoList = async (api, token, accountID) => {
   const items = [];
   const slug = answers.isOrg ? "orgs" : "users";
-  const source = api.includes("github") ? "github" : "circleci";
+  const source = VCS === "GitHub" ? "github" : "circleci";
   let pageToken = 1;
   let keepGoing = true;
 
   do {
     const { response, responseBody } = await getRepos(api, token, slug, accountID, pageToken);
-    if (response.status !== 200) exitWithError('Failed to get data with the following error:\n', responseBody);
+    if (response.status !== 200) exitWithError('Failed to get repositories with the following error:\n', responseBody);
 
-    const reducer = source === "github"
+    const reducer = VCS === "GitHub"
       ? (acc, curr) => [...acc, curr.full_name]
       : (acc, curr) => [...acc, `${curr.username}/${curr.reponame}`];
 
@@ -119,10 +119,10 @@ const repoData = await Promise.all(
   repoList.map(async (repo) => {
     const vcsSlug = resolveVcsSlug(VCS);
     const { response, responseBody } = await getProjectVariables(CIRCLE_V2_API, CIRCLE_TOKEN, repo, vcsSlug);
-    if (response.status !== 200) exitWithError('Failed to get data with the following error:\n', responseBody);
+    if (response.status !== 200 && response.status !== 404) exitWithError('Failed to get project variables with the following error:\n', responseBody);
     return { name: repo, variables: responseBody.items };
   })
 );
-USER_DATA.projects = repoData.filter((repo) => repo.variables.length > 0);
+USER_DATA.projects = repoData.filter((repo) => repo.variables?.length > 0);
 
 console.dir(USER_DATA, { depth: null });
