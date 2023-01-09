@@ -1,4 +1,4 @@
-import { fetchWithToken } from "./utils";
+import { fetchWithToken } from "./utils.mjs";
 
 export type GitHubResponseRepo = {
   id: number;

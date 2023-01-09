@@ -3,7 +3,7 @@ import {
   CircleCIContext,
   CircleCIProject,
   CircleCIPaginatedAPIResponse,
-} from "./circleci";
+} from "./circleci.mjs";
 
 export type CircleCIEnvInspectorReport = {
   [name: string]: {
@@ -51,6 +51,7 @@ export async function fetchWithToken<T>(
   return { response, responseBody: responseBody as T };
 }
 
+// @ts-ignore
 const getPaginatedData = async <T>(
   token: string,
   identifier: string,

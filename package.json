@@ -18,6 +18,7 @@
     "node-fetch": "^2.6.1",
     "npm": "^9.2.0"
   },
+  "type":"module",
   "devDependencies": {
     "@types/inquirer": "^9.0.3",
     "@types/node": "^18.11.18",

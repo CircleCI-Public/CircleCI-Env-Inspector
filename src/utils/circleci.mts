@@ -1,4 +1,4 @@
-import { exitWithError, fetchWithToken } from "./utils";
+import { exitWithError, fetchWithToken } from "./utils.mjs";
 
 export const CIRCLE_V1_API =
   process.env.CIRCLE_V1_API ?? "https://circleci.com/api/v1.1";

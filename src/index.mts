@@ -1,7 +1,7 @@
 import inquirer from "inquirer";
-import { CircleCIEnvInspectorReport, exitWithError } from "./utils/utils";
+import { CircleCIEnvInspectorReport, exitWithError } from "./utils/utils.mjs";
 import * as fs from "fs";
-import { getCollaborations } from "./utils/circleci";
+import { getCollaborations } from "./utils/circleci.mjs";
 
 const USER_DATA: CircleCIEnvInspectorReport[] = [];
 
