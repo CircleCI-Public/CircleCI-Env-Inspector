@@ -15,9 +15,9 @@ export type CircleCICollaboration = {
 };
 
 export type CircleCIPaginatedAPIResponse<T> = {
-  items: T[]
-  next_page_token: string
-}
+  items: T[];
+  next_page_token: string;
+};
 
 export type CircleCIContextVariable = {
   variable: string;
@@ -75,8 +75,12 @@ export async function getContexts(
 }
 
 export const getCircleCIRepos = async (secretToken: string) => {
-  return fetchWithToken<CircleCIResponseRepo[]>(`${CIRCLE_V1_API}/projects`, secretToken, "circleci");
-}
+  return fetchWithToken<CircleCIResponseRepo[]>(
+    `${CIRCLE_V1_API}/projects`,
+    secretToken,
+    "circleci"
+  );
+};
 
 export async function getProjectVariables(
   token: string,
@@ -85,7 +89,12 @@ export async function getProjectVariables(
   wait = 0
 ) {
   const url = `${CIRCLE_V2_API}/project/${vcs}/${repo}/envvar`;
-  return fetchWithToken<CircleCIProjectVariable[]>(url, token, "circleci", wait);
+  return fetchWithToken<CircleCIProjectVariable[]>(
+    url,
+    token,
+    "circleci",
+    wait
+  );
 }
 
 export type CircleCIAccount = {
@@ -93,13 +102,19 @@ export type CircleCIAccount = {
   slug: string;
   id: string;
   avatar_url: string;
-}
+};
 
 export async function getAccounts(token: string): Promise<CircleCIAccount[]> {
   const collaborations = await getCollaborations(token);
   if (!collaborations.response.ok) {
-    exitWithError("Failed to fetch CircleCI Accounts: ", collaborations.response);
-  } else if (!collaborations.responseBody || collaborations.responseBody.length === 0) {
+    exitWithError(
+      "Failed to fetch CircleCI Accounts: ",
+      collaborations.response
+    );
+  } else if (
+    !collaborations.responseBody ||
+    collaborations.responseBody.length === 0
+  ) {
     exitWithError("No CircleCI accounts found");
   }
   return collaborations.responseBody;

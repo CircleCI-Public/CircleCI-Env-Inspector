@@ -13,8 +13,11 @@ export type GitHubResponseRepo = {
 
 const GITHUB_API = process.env.GITHUB_API ?? "https://api.github.com";
 
-
-export const getGitHubRepos = async (secretToken: string, slug: string, pageToken:string) => {
+export const getGitHubRepos = async (
+  secretToken: string,
+  slug: string,
+  pageToken: string
+) => {
   return fetchWithToken<GitHubResponseRepo[]>(
     `${GITHUB_API}/${slug}/repos?per_page=100&page=${pageToken}`,
     secretToken,

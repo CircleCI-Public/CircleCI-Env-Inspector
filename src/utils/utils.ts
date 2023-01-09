@@ -2,7 +2,6 @@ import fetch from "node-fetch";
 import {
   CircleCIContext,
   CircleCIProject,
-  CircleCICollaboration,
   CircleCIPaginatedAPIResponse,
 } from "./circleci";
 

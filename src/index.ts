@@ -1,7 +1,7 @@
 import inquirer from "inquirer";
-import { CircleCIEnvInspectorReport } from "./utils";
+import { CircleCIEnvInspectorReport, exitWithError } from "./utils/utils";
 import * as fs from "fs";
-import { getCollaborations } from "./circleci";
+import { getCollaborations } from "./utils/circleci";
 
 const USER_DATA: CircleCIEnvInspectorReport[] = [];
 
@@ -21,9 +21,12 @@ const CIRCLE_TOKEN =
 // let GITHUB_TOKEN = "";
 
 // Get Collaborations
-const accounts = await getCollaborations(CIRCLE_TOKEN);
+const { responseBody: accounts, response: accountsRes } =
+  await getCollaborations(CIRCLE_TOKEN);
+if (!accountsRes.ok)
+  exitWithError("Couldn't fetch accounts. Please open an issue.", accountsRes);
 // Checks to see if this is a github account; if so, checks/asks for a github token
-const isGitHub = accounts.responseBody.find(
+const isGitHub = accounts.find(
   (account) => account.vcs_type.toLowerCase() === "github"
 );
 const GITHUB_TOKEN: string = isGitHub
@@ -40,8 +43,11 @@ const GITHUB_TOKEN: string = isGitHub
   : "";
 
 // Loop through each account
+accounts.forEach(async (account) => {
+  console.log(account);
+});
 
-
+exitWithError("TESTING")
 
 // console.log("Getting Contexts Data...");
 
