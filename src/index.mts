@@ -1,7 +1,21 @@
 import inquirer from "inquirer";
-import { CircleCIEnvInspectorReport, exitWithError, getPaginatedData } from "./utils/utils.mjs";
-import * as fs from "fs";
-import { CircleCIContext, CircleCIContextVariable, getCollaborations, getContexts, getContextVariables } from "./utils/circleci.mjs";
+import {
+  exitWithError,
+  getPaginatedData,
+} from "./utils/utils.mjs";
+import {
+  CircleCIAccountData,
+  CircleCIContext,
+  CircleCIContextVariable,
+  CircleCIEnvInspectorReport,
+  CircleCIResponseRepo,
+  getCircleCIRepos,
+  getCollaborations,
+  getContexts,
+  getContextVariables,
+} from "./utils/circleci.mjs";
+import chalk from "chalk";
+
 
 const USER_DATA: CircleCIEnvInspectorReport[] = [];
 
@@ -23,64 +37,70 @@ const { responseBody: accounts, response: accountsRes } =
   await getCollaborations(CIRCLE_TOKEN);
 if (!accountsRes.ok)
   exitWithError("Couldn't fetch accounts. Please open an issue.", accountsRes);
-// Checks to see if this is a github account; if so, checks/asks for a github token
-const isGitHub = accounts.find(
-  (account) => account.vcs_type.toLowerCase() === "github"
-);
-const GITHUB_TOKEN: string = isGitHub
-  ? process.env.GITHUB_TOKEN ??
-    (
-      await inquirer.prompt([
-        {
-          message: "Enter your GitHub API token",
-          type: "password",
-          name: "ghToken",
-        },
-      ])
-    ).ghToken
-  : "";
 
+console.log(chalk.bold(`Found ${accounts.length} accounts.`));
 for (let index = 0; index < accounts.length; index++) {
   const account = accounts[index];
-  console.log(`Getting data for ${account.name}...`);
-  const data: CircleCIEnvInspectorReport = { [account.name]: { contexts: [], projects: [], unavailable: [], } };
+  const accountData: CircleCIAccountData = {
+      contexts: [],
+      projects: [],
+      unavailable: [],
+    }
+  const FetchingDataMessage = () => {
+    const vcs = () => {
+      switch (account.vcs_type.toLowerCase()) {
+        case "github" || "gh":
+          return chalk.bold.green("GitHub");
+        case "bitbucket" || "bb":
+          return chalk.bold.blue("Bitbucket");
+        case "circleci":
+          return `${chalk.bold.white("CircleCI")}/${chalk.bold.yellow(
+            "GitLab"
+          )}`;
+        default:
+          exitWithError("Invalid VCS: ", account);
+      }
+    };
+    return `Fetching data for ${chalk.bold.magenta(
+      account.name
+    )} from ${vcs()}...  ${chalk.italic((index + 1) + "/" + accounts.length)}`;
+  };
+  console.log(FetchingDataMessage());
 
-  // If the account doesn't have an ID, skip it
-  if (!account.id) {
-    USER_DATA.push(data);
-    console.log(`The account "${account.name}" does not have a CircleCI ID. Skipping it.`, '\n');
-    continue;
-  }
-
-  console.log(`Getting contexts...`);
+   // Fetching Org Context information
   const contextList = await getPaginatedData<CircleCIContext>(
     CIRCLE_TOKEN,
     account.id,
     getContexts
   );
 
-  console.log(`Getting variables...`);
-  const contextData = await Promise.all(
-    contextList.map(async (context) => {
-      const variables = await getPaginatedData<CircleCIContextVariable>(
+  const contextData = contextList.map(async (context) => {
+    return {
+      name: context.name,
+      id: context.id,
+      variables: await getPaginatedData<CircleCIContextVariable>(
         CIRCLE_TOKEN,
         context.id,
         getContextVariables
-      );
-      return {
-        name: context.name,
-        id: context.id,
-        variables,
-      };
-    })
-  );
-  data[account.name].contexts = contextData;
+      ),
+    };
+  });
 
-  USER_DATA.push(data);
-  console.log("DONE", '\n');
+  accountData.contexts = await Promise.all(contextData);
+
+  // Fetching Org Project information
+
+  const RepoList = await getPaginatedData<CircleCIResponseRepo>(CIRCLE_TOKEN, account.id, getCircleCIRepos)
+  accountData.projects = RepoList.map((repo) => {
+    return {
+      name: repo.name,
+      variables: []
+    }
+  });
+
+  USER_DATA.push({ [account.name]: accountData });
+
 }
-
-// console.log("Getting Projects Data...");
 
 // const getRepoList = async (
 //   api: string,
@@ -130,10 +150,6 @@ for (let index = 0; index < accounts.length; index++) {
 //   return items;
 // };
 
-// const repoList =
-//   VCS === "GitHub"
-//     ? await getRepoList(GITHUB_API, GITHUB_TOKEN, answers.account)
-//     : await getRepoList(CIRCLE_V1_API, CIRCLE_TOKEN, answers.account);
 
 // console.log("Getting Projects Variables...");
 

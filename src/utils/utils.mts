@@ -1,21 +1,15 @@
 import fetch from "node-fetch";
 import {
-  CircleCIContext,
-  CircleCIProject,
   CircleCIPaginatedAPIResponse,
 } from "./circleci.mjs";
 import { Response } from "node-fetch";
+import chalk from "chalk";
 
-export type CircleCIEnvInspectorReport = {
-  [name: string]: {
-    contexts: CircleCIContext[];
-    projects: CircleCIProject[];
-    unavailable: any[];
-  };
-};
-
+export function warn(message: string) {
+  chalk.bold.red(`Error: ${message}`);
+}
 export function exitWithError(message: string, ...optionalParams: any[]) {
-  console.error(message, optionalParams);
+  console.error(warn(message), optionalParams);
   process.exit(1);
 }
 
@@ -23,11 +17,11 @@ export function debug(message: string, ...optionalParams: any[]) {
   console.log(message, optionalParams);
 }
 
-export function resolveVcsSlug(vcs: string) {
-  if (vcs === "GitHub") return "gh";
-  else if (vcs === "Bitbucket") return "bb";
-  else exitWithError("Invalid VCS: ", vcs);
-}
+// export function resolveVcsSlug(vcs: string) {
+//   if (vcs === "GitHub") return "gh";
+//   else if (vcs === "Bitbucket") return "bb";
+//   else exitWithError("Invalid VCS: ", vcs);
+// }
 
 export async function fetchWithToken<T>(
   url: string,
@@ -78,4 +72,13 @@ export async function getPaginatedData<T>(
   } while (pageToken);
 
   return items;
+};
+
+export type VCS_TYPE = "github" | "bitbucket" | "circleci"
+
+
+export type RepoData = {
+  name: string;
+  vcs_type: VCS_TYPE;
+  url: string;
 };

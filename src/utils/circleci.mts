@@ -1,16 +1,25 @@
 import { Response } from "node-fetch";
-import { exitWithError, fetchWithToken } from "./utils.mjs";
+import { exitWithError, fetchWithToken, VCS_TYPE } from "./utils.mjs";
 
-export const CIRCLE_V1_API =
-  process.env.CIRCLE_V1_API ?? "https://circleci.com/api/v1.1";
+export type CircleCIEnvInspectorReport = {
+  [name: string]: CircleCIAccountData;
+};
 
-export const CIRCLE_V2_API =
-  process.env.CIRCLE_V2_API ?? "https://circleci.com/api/v2";
+export type CircleCIAccountData = {
+  contexts: CircleCIContext[];
+  projects: CircleCIProject[];
+  unavailable: any[];
+};
+
+export const CIRCLE_API_HOST = "https://circleci.com"
+export const CIRCLE_API_PRIVATE = `${CIRCLE_API_HOST}/api/private`;
+export const CIRCLE_V1_API = process.env.CIRCLE_V1_API ?? `${CIRCLE_API_HOST}/api/v1.1`;
+export const CIRCLE_V2_API = process.env.CIRCLE_V2_API ?? `${CIRCLE_API_HOST}/api/v2`;
 
 export type CircleCICollaboration = {
   id: string;
   name: string;
-  vcs_type: string;
+  vcs_type: VCS_TYPE;
   avatar_url: string;
   slug: string;
 };
@@ -43,20 +52,28 @@ export type CircleCIProject = {
 };
 
 export type CircleCIResponseRepo = {
-  reponame: string;
-  username: string;
-  vcs_url: string;
+  id: string;
+  name: string;
+  slug: string;
+  has_trigger: boolean;
 };
 
-export async function getContextVariables<T>(
+export async function getContextVariables(
   token: string,
   contextID: string,
   pageToken: string
-): Promise<{ response: Response; responseBody: CircleCIPaginatedAPIResponse<T>; }> {
+): Promise<{
+  response: Response;
+  responseBody: CircleCIPaginatedAPIResponse<CircleCIContextVariable>;
+}> {
   const url = pageToken
     ? `${CIRCLE_V2_API}/context/${contextID}/environment-variable?page-token=${pageToken}`
     : `${CIRCLE_V2_API}/context/${contextID}/environment-variable`;
-  return fetchWithToken<CircleCIPaginatedAPIResponse<T>>(url, token, "circleci");
+  return fetchWithToken<CircleCIPaginatedAPIResponse<CircleCIContextVariable>>(
+    url,
+    token,
+    "circleci"
+  );
 }
 
 export async function getCollaborations(token: string) {
@@ -64,21 +81,32 @@ export async function getCollaborations(token: string) {
   return await fetchWithToken<CircleCICollaboration[]>(url, token, "circleci");
 }
 
-export async function getContexts<T>(
+
+export async function getContexts(
   token: string,
   ownerID: string,
   pageToken: string
-): Promise<{ response: Response; responseBody: CircleCIPaginatedAPIResponse<T>; }> {
+): Promise<{
+  response: Response;
+  responseBody: CircleCIPaginatedAPIResponse<CircleCIContext>;
+}> {
   const url = pageToken
     ? `${CIRCLE_V2_API}/context?owner-id=${ownerID}&page-token=${pageToken}`
     : `${CIRCLE_V2_API}/context?owner-id=${ownerID}`;
 
-  return await fetchWithToken<CircleCIPaginatedAPIResponse<T>>(url, token, "circleci");
+  return await fetchWithToken<CircleCIPaginatedAPIResponse<CircleCIContext>>(
+    url,
+    token,
+    "circleci"
+  );
 }
 
-export const getCircleCIRepos = async (secretToken: string) => {
-  return fetchWithToken<CircleCIResponseRepo[]>(
-    `${CIRCLE_V1_API}/projects`,
+export const getCircleCIRepos = async (secretToken: string, orgID: string, pageToken: string) => {
+  const url = pageToken
+    ? `${CIRCLE_API_PRIVATE}/project?organization-id=${orgID}&page-token=${pageToken}`
+    : `${CIRCLE_API_PRIVATE}/project?organization-id=${orgID}`;
+  return fetchWithToken<CircleCIPaginatedAPIResponse<CircleCIResponseRepo>>(
+    url,
     secretToken,
     "circleci"
   );
