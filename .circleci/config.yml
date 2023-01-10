@@ -1,0 +1,8 @@
+orbs:
+  node: circleci/node@5.0.3
+
+workflows:
+  ci:
+    jobs:
+      - node/run:
+          npm-run: lint
