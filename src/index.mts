@@ -1,8 +1,5 @@
 import inquirer from "inquirer";
-import {
-  exitWithError,
-  getPaginatedData,
-} from "./utils/utils.mjs";
+import { exitWithError, getPaginatedData } from "./utils/utils.mjs";
 import {
   CircleCIAccountData,
   CircleCIContext,
@@ -15,7 +12,6 @@ import {
   getContextVariables,
 } from "./utils/circleci.mjs";
 import chalk from "chalk";
-
 
 const USER_DATA: CircleCIEnvInspectorReport[] = [];
 
@@ -42,10 +38,10 @@ console.log(chalk.bold(`Found ${accounts.length} accounts.`));
 for (let index = 0; index < accounts.length; index++) {
   const account = accounts[index];
   const accountData: CircleCIAccountData = {
-      contexts: [],
-      projects: [],
-      unavailable: [],
-    }
+    contexts: [],
+    projects: [],
+    unavailable: [],
+  };
   const FetchingDataMessage = () => {
     const vcs = () => {
       switch (account.vcs_type.toLowerCase()) {
@@ -63,11 +59,11 @@ for (let index = 0; index < accounts.length; index++) {
     };
     return `Fetching data for ${chalk.bold.magenta(
       account.name
-    )} from ${vcs()}...  ${chalk.italic((index + 1) + "/" + accounts.length)}`;
+    )} from ${vcs()}...  ${chalk.italic(index + 1 + "/" + accounts.length)}`;
   };
   console.log(FetchingDataMessage());
 
-   // Fetching Org Context information
+  // Fetching Org Context information
   const contextList = await getPaginatedData<CircleCIContext>(
     CIRCLE_TOKEN,
     account.id,
@@ -90,16 +86,19 @@ for (let index = 0; index < accounts.length; index++) {
 
   // Fetching Org Project information
 
-  const RepoList = await getPaginatedData<CircleCIResponseRepo>(CIRCLE_TOKEN, account.id, getCircleCIRepos)
+  const RepoList = await getPaginatedData<CircleCIResponseRepo>(
+    CIRCLE_TOKEN,
+    account.id,
+    getCircleCIRepos
+  );
   accountData.projects = RepoList.map((repo) => {
     return {
       name: repo.name,
-      variables: []
-    }
+      variables: [],
+    };
   });
 
   USER_DATA.push({ [account.name]: accountData });
-
 }
 
 // const getRepoList = async (
@@ -149,7 +148,6 @@ for (let index = 0; index < accounts.length; index++) {
 
 //   return items;
 // };
-
 
 // console.log("Getting Projects Variables...");
 

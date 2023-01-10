@@ -8,13 +8,15 @@ export type CircleCIEnvInspectorReport = {
 export type CircleCIAccountData = {
   contexts: CircleCIContext[];
   projects: CircleCIProject[];
-  unavailable: any[];
+  unavailable: string[];
 };
 
-export const CIRCLE_API_HOST = "https://circleci.com"
+export const CIRCLE_API_HOST = "https://circleci.com";
 export const CIRCLE_API_PRIVATE = `${CIRCLE_API_HOST}/api/private`;
-export const CIRCLE_V1_API = process.env.CIRCLE_V1_API ?? `${CIRCLE_API_HOST}/api/v1.1`;
-export const CIRCLE_V2_API = process.env.CIRCLE_V2_API ?? `${CIRCLE_API_HOST}/api/v2`;
+export const CIRCLE_V1_API =
+  process.env.CIRCLE_V1_API ?? `${CIRCLE_API_HOST}/api/v1.1`;
+export const CIRCLE_V2_API =
+  process.env.CIRCLE_V2_API ?? `${CIRCLE_API_HOST}/api/v2`;
 
 export type CircleCICollaboration = {
   id: string;
@@ -81,7 +83,6 @@ export async function getCollaborations(token: string) {
   return await fetchWithToken<CircleCICollaboration[]>(url, token, "circleci");
 }
 
-
 export async function getContexts(
   token: string,
   ownerID: string,
@@ -101,7 +102,11 @@ export async function getContexts(
   );
 }
 
-export const getCircleCIRepos = async (secretToken: string, orgID: string, pageToken: string) => {
+export const getCircleCIRepos = async (
+  secretToken: string,
+  orgID: string,
+  pageToken: string
+) => {
   const url = pageToken
     ? `${CIRCLE_API_PRIVATE}/project?organization-id=${orgID}&page-token=${pageToken}`
     : `${CIRCLE_API_PRIVATE}/project?organization-id=${orgID}`;

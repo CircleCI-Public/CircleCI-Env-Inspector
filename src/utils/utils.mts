@@ -1,7 +1,5 @@
 import fetch from "node-fetch";
-import {
-  CircleCIPaginatedAPIResponse,
-} from "./circleci.mjs";
+import { CircleCIPaginatedAPIResponse } from "./circleci.mjs";
 import { Response } from "node-fetch";
 import chalk from "chalk";
 
@@ -67,15 +65,15 @@ export async function getPaginatedData<T>(
       identifier,
       pageToken
     );
-    if (response.ok && responseBody.items.length > 0) items.push(...responseBody.items);
+    if (response.ok && responseBody.items.length > 0)
+      items.push(...responseBody.items);
     pageToken = responseBody.next_page_token;
   } while (pageToken);
 
   return items;
-};
+}
 
-export type VCS_TYPE = "github" | "bitbucket" | "circleci"
-
+export type VCS_TYPE = "github" | "bitbucket" | "circleci";
 
 export type RepoData = {
   name: string;
