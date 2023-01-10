@@ -10,3 +10,6 @@ docs
 sample
 # don't lint configs
 webpack.config.*
+# don't lint eslintrc
+.eslintrc.cjs
+
