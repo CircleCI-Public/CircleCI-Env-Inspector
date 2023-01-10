@@ -4,6 +4,7 @@ import {
   CircleCIProject,
   CircleCIPaginatedAPIResponse,
 } from "./circleci.mjs";
+import { Response } from "node-fetch";
 
 export type CircleCIEnvInspectorReport = {
   [name: string]: {
@@ -51,19 +52,18 @@ export async function fetchWithToken<T>(
   return { response, responseBody: responseBody as T };
 }
 
-// @ts-ignore
-const getPaginatedData = async <T>(
+export async function getPaginatedData<T>(
   token: string,
   identifier: string,
   caller: (
     token: string,
-    identifier: string,
+    [identifier]: string,
     pageToken: string
   ) => Promise<{
     response: Response;
     responseBody: CircleCIPaginatedAPIResponse<T>;
   }>
-) => {
+) {
   const items = [];
   let pageToken = "";
 
@@ -73,12 +73,7 @@ const getPaginatedData = async <T>(
       identifier,
       pageToken
     );
-    if (response.status !== 200)
-      exitWithError(
-        "Failed to get data with the following error:\n",
-        responseBody
-      );
-    if (responseBody.items.length > 0) items.push(...responseBody.items);
+    if (response.ok && responseBody.items.length > 0) items.push(...responseBody.items);
     pageToken = responseBody.next_page_token;
   } while (pageToken);
 

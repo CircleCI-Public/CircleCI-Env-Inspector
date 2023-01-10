@@ -1,3 +1,4 @@
+import { Response } from "node-fetch";
 import { exitWithError, fetchWithToken } from "./utils.mjs";
 
 export const CIRCLE_V1_API =
@@ -47,15 +48,15 @@ export type CircleCIResponseRepo = {
   vcs_url: string;
 };
 
-export async function getContextVariables(
+export async function getContextVariables<T>(
   token: string,
   contextID: string,
   pageToken: string
-) {
+): Promise<{ response: Response; responseBody: CircleCIPaginatedAPIResponse<T>; }> {
   const url = pageToken
     ? `${CIRCLE_V2_API}/context/${contextID}/environment-variable?page-token=${pageToken}`
     : `${CIRCLE_V2_API}/context/${contextID}/environment-variable`;
-  return fetchWithToken<CircleCIContextVariable[]>(url, token, "circleci");
+  return fetchWithToken<CircleCIPaginatedAPIResponse<T>>(url, token, "circleci");
 }
 
 export async function getCollaborations(token: string) {
@@ -63,15 +64,16 @@ export async function getCollaborations(token: string) {
   return await fetchWithToken<CircleCICollaboration[]>(url, token, "circleci");
 }
 
-export async function getContexts(
+export async function getContexts<T>(
   token: string,
   ownerID: string,
   pageToken: string
-) {
+): Promise<{ response: Response; responseBody: CircleCIPaginatedAPIResponse<T>; }> {
   const url = pageToken
     ? `${CIRCLE_V2_API}/context?owner-id=${ownerID}&page-token=${pageToken}`
     : `${CIRCLE_V2_API}/context?owner-id=${ownerID}`;
-  return fetchWithToken<CircleCIContext[]>(url, token, "circleci");
+
+  return await fetchWithToken<CircleCIPaginatedAPIResponse<T>>(url, token, "circleci");
 }
 
 export const getCircleCIRepos = async (secretToken: string) => {

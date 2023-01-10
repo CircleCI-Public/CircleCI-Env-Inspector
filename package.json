@@ -12,15 +12,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/node-fetch": "^2.6.1",
     "i": "^0.3.7",
     "inquirer": "^9.1.4",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^3.3.0",
     "npm": "^9.2.0"
   },
   "type":"module",
   "devDependencies": {
     "@types/inquirer": "^9.0.3",
+    "@types/node-fetch": "^2.6.2",
     "@types/node": "^18.11.18",
     "rimraf": "^3.0.2",
     "ts-node": "^10.9.1",

@@ -1,7 +1,7 @@
 import inquirer from "inquirer";
-import { CircleCIEnvInspectorReport, exitWithError } from "./utils/utils.mjs";
+import { CircleCIEnvInspectorReport, exitWithError, getPaginatedData } from "./utils/utils.mjs";
 import * as fs from "fs";
-import { getCollaborations } from "./utils/circleci.mjs";
+import { CircleCIContext, CircleCIContextVariable, getCollaborations, getContexts, getContextVariables } from "./utils/circleci.mjs";
 
 const USER_DATA: CircleCIEnvInspectorReport[] = [];
 
@@ -17,8 +17,6 @@ const CIRCLE_TOKEN =
       },
     ])
   ).cciToken;
-
-// let GITHUB_TOKEN = "";
 
 // Get Collaborations
 const { responseBody: accounts, response: accountsRes } =
@@ -42,40 +40,45 @@ const GITHUB_TOKEN: string = isGitHub
     ).ghToken
   : "";
 
-// Loop through each account
-accounts.forEach(async (account) => {
-  console.log(account);
-});
+for (let index = 0; index < accounts.length; index++) {
+  const account = accounts[index];
+  console.log(`Getting data for ${account.name}...`);
+  const data: CircleCIEnvInspectorReport = { [account.name]: { contexts: [], projects: [], unavailable: [], } };
 
-exitWithError("TESTING")
+  // If the account doesn't have an ID, skip it
+  if (!account.id) {
+    USER_DATA.push(data);
+    console.log(`The account "${account.name}" does not have a CircleCI ID. Skipping it.`, '\n');
+    continue;
+  }
 
-// console.log("Getting Contexts Data...");
+  console.log(`Getting contexts...`);
+  const contextList = await getPaginatedData<CircleCIContext>(
+    CIRCLE_TOKEN,
+    account.id,
+    getContexts
+  );
 
-// if (accountID) {
-//   const contextList = await getPaginatedData<CircleCIContext>(
-//     CIRCLE_TOKEN,
-//     accountID,
-//     getContexts
-//   );
+  console.log(`Getting variables...`);
+  const contextData = await Promise.all(
+    contextList.map(async (context) => {
+      const variables = await getPaginatedData<CircleCIContextVariable>(
+        CIRCLE_TOKEN,
+        context.id,
+        getContextVariables
+      );
+      return {
+        name: context.name,
+        id: context.id,
+        variables,
+      };
+    })
+  );
+  data[account.name].contexts = contextData;
 
-//   const contextData = await Promise.all(
-//     contextList.map(async (context) => {
-//       const variables = await getPaginatedData<CircleCIPaginatedAPIResponse<CircleCIContextVariable>>(
-//         CIRCLE_TOKEN,
-//         context.id,
-//         getContextVariables
-//       );
-//       return {
-//         name: context.name,
-//         id: context.id,
-//         variables,
-//       };
-//     })
-//   );
-//   USER_DATA.contexts = contextData;
-// } else {
-//   USER_DATA.contexts = [];
-// }
+  USER_DATA.push(data);
+  console.log("DONE", '\n');
+}
 
 // console.log("Getting Projects Data...");
 
@@ -174,5 +177,6 @@ exitWithError("TESTING")
 
 // USER_DATA.projects = repoData.filter((repo) => repo?.variables?.length > 0);
 
-fs.writeFileSync("circleci-data.json", JSON.stringify(USER_DATA, null, 2));
-console.log("Log created at circleci-data.json");
+// fs.writeFileSync("circleci-data.json", JSON.stringify(USER_DATA, null, 2));
+// console.log("Log created at circleci-data.json");
+console.dir(USER_DATA, { depth: null });
