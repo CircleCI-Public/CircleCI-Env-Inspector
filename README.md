@@ -1,8 +1,10 @@
 # CircleCI-Env-Inspector
+
 An interactive CLI tool for fetching all of your secrets from CircleCI.
 
 ## Pre-requisites
- - Docker
+
+- Docker
 
 ## To Run
 
@@ -17,6 +19,7 @@ An interactive CLI tool for fetching all of your secrets from CircleCI.
   "contexts": [
     {
       "name": "CONTEXT_NAME",
+      "url": "https://app.circleci.com/settings/organization/<VCS>/<ORG>/contexts/<CONTEXT-ID>",
       "id": "xxx",
       "variables": [
         {
@@ -30,10 +33,15 @@ An interactive CLI tool for fetching all of your secrets from CircleCI.
   "projects": [
     {
       "name": "ORG/REPO",
-      "variables": [
-        { "name": "VAR", "value": "xxxx" }
-      ]
+      "url": "https://app.circleci.com/settings/project/<VCS>/<ORG>/<REPO>/environment-variables",
+      "variables": [{ "name": "VAR", "value": "xxxx" }]
     }
   ]
 }
 ```
+
+# F.A.Q.
+
+## Q: Will this tool return the values of my secrets?
+
+A: **No.** This tool will only return the names of the secrets and as much information as can be provided by the CircleCI APIs. CircleCI _does not_ return the values of secrets through their APIs. The information from this tool is for auditing and key rotation purposes.
