@@ -116,4 +116,4 @@ for (let index = 0; index < accounts.length; index++) {
   USER_DATA.push({ [account.name]: accountData });
 }
 
-writeFileSync("output.json", JSON.stringify(USER_DATA, null, 2));
+writeFileSync("circleci-data.json", JSON.stringify(USER_DATA, null, 2));
