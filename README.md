@@ -1,8 +1,10 @@
 # CircleCI-Env-Inspector
+
 An interactive CLI tool for fetching all of your secrets from CircleCI.
 
 ## Pre-requisites
- - Docker
+
+- Docker
 
 ## To Run
 
@@ -17,7 +19,7 @@ An interactive CLI tool for fetching all of your secrets from CircleCI.
   "contexts": [
     {
       "name": "CONTEXT_NAME",
-      "url": "https://app.circleci.com/settings/organization/<VCS>/<ORG>/contexts/<CONTEXT-ID>"
+      "url": "https://app.circleci.com/settings/organization/<VCS>/<ORG>/contexts/<CONTEXT-ID>",
       "id": "xxx",
       "variables": [
         {
@@ -32,9 +34,7 @@ An interactive CLI tool for fetching all of your secrets from CircleCI.
     {
       "name": "ORG/REPO",
       "url": "https://app.circleci.com/settings/project/<VCS>/<ORG>/<REPO>/environment-variables",
-      "variables": [
-        { "name": "VAR", "value": "xxxx" }
-      ]
+      "variables": [{ "name": "VAR", "value": "xxxx" }]
     }
   ]
 }
