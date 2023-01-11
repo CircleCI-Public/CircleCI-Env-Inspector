@@ -1,4 +1,5 @@
 import { Response } from "node-fetch";
+
 import { exitWithError, fetchWithToken, VCS_TYPE } from "./utils.mjs";
 
 export type CircleCIEnvInspectorReport = {

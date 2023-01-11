@@ -18,10 +18,13 @@ module.exports = {
   plugins: [
     "@typescript-eslint",
     "eslint-plugin-tsdoc",
-    "security",
     "prettier",
+    "security",
+    "simple-import-sort",
   ],
   rules: {
+    "simple-import-sort/imports": "error",
+    "simple-import-sort/exports": "error",
     "tsdoc/syntax": "warn",
     "@typescript-eslint/indent": "off",
     "linebreak-style": ["error", "unix"],

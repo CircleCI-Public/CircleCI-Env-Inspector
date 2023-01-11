@@ -8,13 +8,15 @@
     "dev": "ts-node --esm ./src/index.mts",
     "start": "npm run build && node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "lint": "eslint src/*"
+    "lint": "eslint src/*",
+    "lint:fix": "eslint src/* --fix"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "chalk": "^5.2.0",
+    "eslint-plugin-simple-import-sort": "^8.0.0",
     "i": "^0.3.7",
     "inquirer": "^9.1.4",
     "node-fetch": "^3.3.0",

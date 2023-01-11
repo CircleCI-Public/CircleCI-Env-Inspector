@@ -1,5 +1,7 @@
+import chalk from "chalk";
+import { writeFileSync } from "fs";
 import inquirer from "inquirer";
-import { exitWithError, getPaginatedData } from "./utils/utils.mjs";
+
 import {
   CircleCIAccountData,
   CircleCIContext,
@@ -13,8 +15,7 @@ import {
   getContextVariables,
   getProjectVariables,
 } from "./utils/circleci.mjs";
-import chalk from "chalk";
-import { writeFileSync } from "fs";
+import { exitWithError, getPaginatedData } from "./utils/utils.mjs";
 
 const USER_DATA: CircleCIEnvInspectorReport[] = [];
 

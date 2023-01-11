@@ -1,7 +1,8 @@
-import fetch from "node-fetch";
-import { CircleCIPaginatedAPIResponse } from "./circleci.mjs";
-import { Response } from "node-fetch";
 import chalk from "chalk";
+import fetch from "node-fetch";
+import { Response } from "node-fetch";
+
+import { CircleCIPaginatedAPIResponse } from "./circleci.mjs";
 
 export function warn(message: string) {
   chalk.bold.red(`Error: ${message}`);
