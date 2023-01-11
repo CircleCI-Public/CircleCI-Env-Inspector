@@ -68,7 +68,7 @@ for (let index = 0; index < accounts.length; index++) {
     )} from ${vcs()}...  ${chalk.italic(index + 1 + "/" + accounts.length)}`;
   };
   console.log(FetchingDataMessage());
-  console.log("  " + chalk.bold("Fetching Contexts..."));
+  console.log("  " + chalk.italic("Fetching Contexts..."));
 
   // Fetching Org Context information
   const contextList = await getPaginatedData<CircleCIContext>(
@@ -81,6 +81,7 @@ for (let index = 0; index < accounts.length; index++) {
     return {
       name: context.name,
       id: context.id,
+      url: `https://app.circleci.com/settings/organization/${account.slug}/contexts/${context.id}`,
       variables: await getPaginatedData<CircleCIContextVariable>(
         CIRCLE_TOKEN,
         context.id,
@@ -103,6 +104,7 @@ for (let index = 0; index < accounts.length; index++) {
   const RepoData = RepoList.map(async (repo) => {
     return {
       name: repo.name,
+      url: `https://app.circleci.com/settings/project/${repo.slug}/environment-variables`,
       variables: await getPaginatedData<CircleCIProjectVariable>(
         CIRCLE_TOKEN,
         repo.id,
@@ -117,3 +119,7 @@ for (let index = 0; index < accounts.length; index++) {
 }
 
 writeFileSync("circleci-data.json", JSON.stringify(USER_DATA, null, 2));
+
+console.log(
+  `\n ${chalk.bold.green("Done!")} \n Data saved to circleci-data.json`
+);

@@ -10,6 +10,7 @@ export type CircleCIAccountData = {
   contexts: CircleCIContext[];
   projects: {
     name: string;
+    url: string;
     variables: CircleCIProjectVariable[];
   }[];
   unavailable: string[];
