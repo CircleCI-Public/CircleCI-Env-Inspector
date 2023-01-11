@@ -119,16 +119,17 @@ export const getCircleCIRepos = async (
 
 export async function getProjectVariables(
   token: string,
-  repo: string,
-  vcs: string,
-  wait = 0
-) {
-  const url = `${CIRCLE_V2_API}/project/${vcs}/${repo}/envvar`;
-  return fetchWithToken<CircleCIProjectVariable[]>(
+  slug: string,
+  pageToken: string
+): Promise<{
+  response: Response;
+  responseBody: CircleCIPaginatedAPIResponse<CircleCIProjectVariable>;
+}> {
+  const url = pageToken ? `${CIRCLE_V2_API}/project/${slug}/envvar` : `${CIRCLE_V2_API}/project/${slug}/envvar?page-token=${pageToken}`;
+  return fetchWithToken<CircleCIPaginatedAPIResponse<CircleCIProjectVariable>>(
     url,
     token,
-    "circleci",
-    wait
+    "circleci"
   );
 }
 
