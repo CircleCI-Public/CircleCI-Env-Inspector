@@ -107,7 +107,7 @@ for (let index = 0; index < accounts.length; index++) {
       url: `https://app.circleci.com/settings/project/${repo.slug}/environment-variables`,
       variables: await getPaginatedData<CircleCIProjectVariable>(
         CIRCLE_TOKEN,
-        repo.id,
+        repo.slug,
         getProjectVariables
       ),
     };
