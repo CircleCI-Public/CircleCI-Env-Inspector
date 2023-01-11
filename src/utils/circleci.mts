@@ -12,6 +12,7 @@ export type CircleCIAccountData = {
     name: string;
     url: string;
     variables: CircleCIProjectVariable[];
+    project_keys: CircleCIProjectKey[];
   }[];
   unavailable: string[];
 };
@@ -51,6 +52,14 @@ export type CircleCIContext = {
 export type CircleCIProjectVariable = {
   name: string;
   value: string;
+};
+
+export type CircleCIProjectKey = {
+  type: string;
+  preferred: string;
+  created_at: string;
+  public_key: string;
+  fingerprint: string;
 };
 
 export type CircleCIResponseRepo = {
@@ -129,6 +138,23 @@ export async function getProjectVariables(
     ? `${CIRCLE_V2_API}/project/${slug}/envvar`
     : `${CIRCLE_V2_API}/project/${slug}/envvar?page-token=${pageToken}`;
   return fetchWithToken<CircleCIPaginatedAPIResponse<CircleCIProjectVariable>>(
+    url,
+    token,
+    "circleci"
+  );
+}
+export async function getSSHKeys(
+  token: string,
+  slug: string,
+  pageToken: string
+): Promise<{
+  response: Response;
+  responseBody: CircleCIPaginatedAPIResponse<CircleCIProjectKey>;
+}> {
+  const url = pageToken
+    ? `${CIRCLE_V2_API}/project/${slug}/checkout-key?page-token=${pageToken}`
+    : `${CIRCLE_V2_API}/project/${slug}/checkout-key`;
+  return fetchWithToken<CircleCIPaginatedAPIResponse<CircleCIProjectKey>>(
     url,
     token,
     "circleci"

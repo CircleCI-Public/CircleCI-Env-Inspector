@@ -7,6 +7,7 @@ import {
   CircleCIContext,
   CircleCIContextVariable,
   CircleCIEnvInspectorReport,
+  CircleCIProjectKey,
   CircleCIProjectVariable,
   CircleCIResponseRepo,
   getCircleCIRepos,
@@ -14,6 +15,7 @@ import {
   getContexts,
   getContextVariables,
   getProjectVariables,
+  getSSHKeys,
 } from "./utils/circleci.mjs";
 import { exitWithError, getPaginatedData } from "./utils/utils.mjs";
 
@@ -109,6 +111,11 @@ for (let index = 0; index < accounts.length; index++) {
         CIRCLE_TOKEN,
         repo.slug,
         getProjectVariables
+      ),
+      project_keys: await getPaginatedData<CircleCIProjectKey>(
+        CIRCLE_TOKEN,
+        repo.slug,
+        getSSHKeys
       ),
     };
   });
