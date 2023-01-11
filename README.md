@@ -17,6 +17,7 @@ An interactive CLI tool for fetching all of your secrets from CircleCI.
   "contexts": [
     {
       "name": "CONTEXT_NAME",
+      "url": "https://app.circleci.com/settings/organization/<VCS>/<ORG>/contexts/<CONTEXT-ID>"
       "id": "xxx",
       "variables": [
         {
@@ -30,6 +31,7 @@ An interactive CLI tool for fetching all of your secrets from CircleCI.
   "projects": [
     {
       "name": "ORG/REPO",
+      "url": "https://app.circleci.com/settings/project/<VCS>/<ORG>/<REPO>/environment-variables",
       "variables": [
         { "name": "VAR", "value": "xxxx" }
       ]
