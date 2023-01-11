@@ -1,6 +1,6 @@
 FROM node:18
 WORKDIR /project
 COPY . .
-RUN npm install
+RUN npm install && npm run build
 ENTRYPOINT ["node"]
-CMD ["index.js"]
+CMD ["./dist/index.mjs"]
