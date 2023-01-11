@@ -14,7 +14,7 @@ import {
   getProjectVariables,
 } from "./utils/circleci.mjs";
 import chalk from "chalk";
-import {writeFileSync} from "fs";
+import { writeFileSync } from "fs";
 
 const USER_DATA: CircleCIEnvInspectorReport[] = [];
 
@@ -98,11 +98,11 @@ for (let index = 0; index < accounts.length; index++) {
     getCircleCIRepos
   );
 
-  console.log("  " + chalk.italic("Fetching Project Variables..."))
+  console.log("  " + chalk.italic("Fetching Project Variables..."));
   const RepoData = RepoList.map(async (repo) => {
     return {
       name: repo.name,
-      variables:  await getPaginatedData<CircleCIProjectVariable>(
+      variables: await getPaginatedData<CircleCIProjectVariable>(
         CIRCLE_TOKEN,
         repo.id,
         getProjectVariables

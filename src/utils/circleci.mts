@@ -125,7 +125,9 @@ export async function getProjectVariables(
   response: Response;
   responseBody: CircleCIPaginatedAPIResponse<CircleCIProjectVariable>;
 }> {
-  const url = pageToken ? `${CIRCLE_V2_API}/project/${slug}/envvar` : `${CIRCLE_V2_API}/project/${slug}/envvar?page-token=${pageToken}`;
+  const url = pageToken
+    ? `${CIRCLE_V2_API}/project/${slug}/envvar`
+    : `${CIRCLE_V2_API}/project/${slug}/envvar?page-token=${pageToken}`;
   return fetchWithToken<CircleCIPaginatedAPIResponse<CircleCIProjectVariable>>(
     url,
     token,
