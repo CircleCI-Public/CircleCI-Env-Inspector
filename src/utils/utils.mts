@@ -4,23 +4,11 @@ import { Response } from "node-fetch";
 
 import { CircleCIPaginatedAPIResponse } from "./circleci.mjs";
 
-export function warn(message: string) {
-  chalk.bold.red(`Error: ${message}`);
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function exitWithError(message: string, ...optionalParams: any[]) {
-  console.error(warn(message), optionalParams);
+  console.error(chalk.bold.red(`Error: ${message}`), optionalParams);
   process.exit(1);
 }
-
-export function debug(message: string, ...optionalParams: any[]) {
-  console.log(message, optionalParams);
-}
-
-// export function resolveVcsSlug(vcs: string) {
-//   if (vcs === "GitHub") return "gh";
-//   else if (vcs === "Bitbucket") return "bb";
-//   else exitWithError("Invalid VCS: ", vcs);
-// }
 
 export async function fetchWithToken<T>(
   url: string,
@@ -75,9 +63,3 @@ export async function getPaginatedData<T>(
 }
 
 export type VCS_TYPE = "github" | "bitbucket" | "circleci";
-
-export type RepoData = {
-  name: string;
-  vcs_type: VCS_TYPE;
-  url: string;
-};

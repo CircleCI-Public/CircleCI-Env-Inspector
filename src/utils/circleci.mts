@@ -1,6 +1,6 @@
 import { Response } from "node-fetch";
 
-import { exitWithError, fetchWithToken, VCS_TYPE } from "./utils.mjs";
+import { fetchWithToken, VCS_TYPE } from "./utils.mjs";
 
 export type CircleCIEnvInspectorReport = {
   [name: string]: CircleCIAccountData;
@@ -8,7 +8,10 @@ export type CircleCIEnvInspectorReport = {
 
 export type CircleCIAccountData = {
   contexts: CircleCIContext[];
-  projects: CircleCIProject[];
+  projects: {
+    name: string;
+    variables: CircleCIProjectVariable[];
+  }[];
   unavailable: string[];
 };
 
@@ -47,11 +50,6 @@ export type CircleCIContext = {
 export type CircleCIProjectVariable = {
   name: string;
   value: string;
-};
-
-export type CircleCIProject = {
-  name: string;
-  variables: CircleCIProjectVariable[];
 };
 
 export type CircleCIResponseRepo = {
@@ -134,27 +132,4 @@ export async function getProjectVariables(
     token,
     "circleci"
   );
-}
-
-export type CircleCIAccount = {
-  vcs_type: string;
-  slug: string;
-  id: string;
-  avatar_url: string;
-};
-
-export async function getAccounts(token: string): Promise<CircleCIAccount[]> {
-  const collaborations = await getCollaborations(token);
-  if (!collaborations.response.ok) {
-    exitWithError(
-      "Failed to fetch CircleCI Accounts: ",
-      collaborations.response
-    );
-  } else if (
-    !collaborations.responseBody ||
-    collaborations.responseBody.length === 0
-  ) {
-    exitWithError("No CircleCI accounts found");
-  }
-  return collaborations.responseBody;
 }
