@@ -12,6 +12,12 @@ An interactive CLI tool for fetching all of your secrets from CircleCI.
 2. Run `run.sh` from the root of the repo
 3. Follow the prompts.
 
+
+
+https://user-images.githubusercontent.com/33272306/211970169-407a9455-ba34-4de1-a0d0-5a9dd7a8674c.mp4
+
+
+
 ## Example Output
 
 ```json
