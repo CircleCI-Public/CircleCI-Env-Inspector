@@ -40,9 +40,19 @@ https://user-images.githubusercontent.com/33272306/211970169-407a9455-ba34-4de1-
     {
       "name": "ORG/REPO",
       "url": "https://app.circleci.com/settings/project/<VCS>/<ORG>/<REPO>/environment-variables",
-      "variables": [{ "name": "VAR", "value": "xxxx" }]
+      "variables": [{ "name": "VAR", "value": "xxxx" }],
+      "project_keys": [
+        {
+          "type": "deploy-key",
+          "preferred": true,
+          "created_at": "xxx",
+          "public_key": "yyy",
+          "fingerprint": "zzz"
+        }
+          ]
     }
   ]
+
 }
 ```
 
