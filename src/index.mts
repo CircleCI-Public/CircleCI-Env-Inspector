@@ -43,7 +43,6 @@ console.log(chalk.bold(`Found ${accounts.length} accounts.`));
 const demoAccounts = accounts.filter(
   (acc) =>
     acc.name === "KyleTryon" ||
-    acc.name === "game-ci" ||
     acc.name === "TechSquidTV" ||
     acc.name === "KyleTCCI"
 );
