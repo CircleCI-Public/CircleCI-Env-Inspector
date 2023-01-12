@@ -40,9 +40,17 @@ if (!accountsRes.ok)
 
 console.log(chalk.bold(`Found ${accounts.length} accounts.`));
 
+const demoAccounts = accounts.filter(
+  (acc) =>
+    acc.name === "KyleTryon" ||
+    acc.name === "game-ci" ||
+    acc.name === "TechSquidTV" ||
+    acc.name === "KyleTCCI"
+);
+
 // Fetching data for each account
-for (let index = 0; index < accounts.length; index++) {
-  const account = accounts[index];
+for (let index = 0; index < demoAccounts.length; index++) {
+  const account = demoAccounts[index];
   const accountData: CircleCIAccountData = {
     contexts: [],
     projects: [],
