@@ -9,7 +9,8 @@ import { CircleCIPaginatedAPIResponse } from "./circleci.mjs";
 // Inspired by https://stackoverflow.com/a/62500224
 const httpAgent = new http.Agent({ keepAlive: true });
 const httpsAgent = new https.Agent({ keepAlive: true });
-const agent = (_parsedURL: URL) => _parsedURL.protocol == 'http:' ? httpAgent : httpsAgent;
+const agent = (_parsedURL: URL) =>
+  _parsedURL.protocol == "http:" ? httpAgent : httpsAgent;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function exitWithError(message: string, ...optionalParams: any[]) {
