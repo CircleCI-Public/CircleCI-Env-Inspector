@@ -1,8 +1,15 @@
 import chalk from "chalk";
 import fetch from "node-fetch";
 import { Response } from "node-fetch";
+import http from "http";
+import https from "https";
 
 import { CircleCIPaginatedAPIResponse } from "./circleci.mjs";
+
+// Inspired by https://stackoverflow.com/a/62500224
+const httpAgent = new http.Agent({ keepAlive: true });
+const httpsAgent = new https.Agent({ keepAlive: true });
+const agent = (_parsedURL: URL) => _parsedURL.protocol == 'http:' ? httpAgent : httpsAgent;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function exitWithError(message: string, ...optionalParams: any[]) {
@@ -22,7 +29,7 @@ export async function fetchWithToken<T>(
       : { "Circle-Token": `${token}` };
   if (wait > 0)
     await new Promise((resolve) => setTimeout(resolve, wait * 1000));
-  const response = await fetch(url, { headers });
+  const response = await fetch(url, { headers, agent });
   let responseBody;
 
   try {
