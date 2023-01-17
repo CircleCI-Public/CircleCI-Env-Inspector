@@ -1,8 +1,8 @@
 import chalk from "chalk";
-import fetch from "node-fetch";
-import { Response } from "node-fetch";
 import http from "http";
 import https from "https";
+import fetch from "node-fetch";
+import { Response } from "node-fetch";
 
 import { CircleCIPaginatedAPIResponse } from "./circleci.mjs";
 
