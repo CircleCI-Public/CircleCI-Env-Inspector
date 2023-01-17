@@ -79,8 +79,8 @@ for (let index = 0; index < accounts.length; index++) {
     getContexts
   );
 
-  const contextData = contextList.map(async (context) => {
-    return {
+  for (const context of contextList) {
+    accountData.contexts.push({
       name: context.name,
       id: context.id,
       url: `https://app.circleci.com/settings/organization/${account.slug}/contexts/${context.id}`,
@@ -89,10 +89,8 @@ for (let index = 0; index < accounts.length; index++) {
         context.id,
         getContextVariables
       ),
-    };
-  });
-
-  accountData.contexts = await Promise.all(contextData);
+    });
+  }
 
   // Fetching Org Project information
   console.log("  " + chalk.italic("Fetching Projects..."));
@@ -103,8 +101,8 @@ for (let index = 0; index < accounts.length; index++) {
   );
 
   console.log("  " + chalk.italic("Fetching Project Variables..."));
-  const RepoData = RepoList.map(async (repo) => {
-    return {
+  for (const repo of RepoList) {
+    accountData.projects.push({
       name: repo.name,
       url: `https://app.circleci.com/settings/project/${repo.slug}/environment-variables`,
       variables: await getPaginatedData<CircleCIProjectVariable>(
@@ -117,10 +115,8 @@ for (let index = 0; index < accounts.length; index++) {
         repo.slug,
         getSSHKeys
       ),
-    };
-  });
-
-  accountData.projects = await Promise.all(RepoData);
+    });
+  }
 
   USER_DATA.push({ [account.name]: accountData });
 }

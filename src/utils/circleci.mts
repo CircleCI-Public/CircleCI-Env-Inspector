@@ -46,6 +46,7 @@ export type CircleCIContextVariable = {
 export type CircleCIContext = {
   name: string;
   id: string;
+  url: string;
   variables: CircleCIContextVariable[];
 };
 
