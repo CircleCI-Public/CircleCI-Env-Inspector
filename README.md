@@ -9,8 +9,10 @@ An interactive CLI tool for fetching all of your secrets from CircleCI.
 ## To Run
 
 1. Clone this repo
-2. Run `run.sh` from the root of the repo
-3. Follow the prompts.
+2. Obtain a CircleCI API token from https://app.circleci.com/settings/user/tokens
+    - Note: This token must have access to the projects you want to inspect, consider using an org admin account's token
+3. Run `run.sh` from the root of the repo
+4. Follow the prompts.
 
 
 
