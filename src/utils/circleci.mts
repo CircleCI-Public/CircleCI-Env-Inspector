@@ -41,6 +41,7 @@ export type CircleCIContextVariable = {
   variable: string;
   context_id: string;
   created_at: string;
+  error?: string;
 };
 
 export type CircleCIContext = {
@@ -53,6 +54,7 @@ export type CircleCIContext = {
 export type CircleCIProjectVariable = {
   name: string;
   value: string;
+  error?: string;
 };
 
 export type CircleCIProjectKey = {
@@ -61,6 +63,7 @@ export type CircleCIProjectKey = {
   created_at: string;
   public_key: string;
   fingerprint: string;
+  error?: string;
 };
 
 export type CircleCIResponseRepo = {

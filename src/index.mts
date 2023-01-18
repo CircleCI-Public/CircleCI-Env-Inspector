@@ -94,15 +94,28 @@ for (let index = 0; index < accounts.length; index++) {
   );
 
   for (const context of contextList) {
+    let vars;
+    try {
+      vars = await getPaginatedData<CircleCIContextVariable>(
+        CIRCLE_TOKEN,
+        context.id,
+        getContextVariables
+      );
+    } catch (error) {
+      vars = [
+        {
+          variable: "ERROR: Unable to fetch variables. ",
+          context_id: "error",
+          created_at: "error",
+          error: `${error}`,
+        },
+      ];
+    }
     accountData.contexts.push({
       name: context.name,
       id: context.id,
       url: `https://app.circleci.com/settings/organization/${account.slug}/contexts/${context.id}`,
-      variables: await getPaginatedData<CircleCIContextVariable>(
-        CIRCLE_TOKEN,
-        context.id,
-        getContextVariables
-      ),
+      variables: vars,
     });
   }
 
@@ -116,19 +129,47 @@ for (let index = 0; index < accounts.length; index++) {
 
   console.log("  " + chalk.italic("Fetching Project Variables..."));
   for (const repo of RepoList) {
-    accountData.projects.push({
-      name: repo.name,
-      url: `https://app.circleci.com/settings/project/${repo.slug}/environment-variables`,
-      variables: await getPaginatedData<CircleCIProjectVariable>(
+    let vars: CircleCIProjectVariable[];
+    try {
+      vars = await getPaginatedData<CircleCIProjectVariable>(
         CIRCLE_TOKEN,
         repo.slug,
         getProjectVariables
-      ),
-      project_keys: await getPaginatedData<CircleCIProjectKey>(
+      );
+    } catch (error) {
+      vars = [
+        {
+          name: "ERROR: Unable to fetch variables. ",
+          value: "error",
+          error: `${error}`,
+        },
+      ];
+    }
+    let projectKeys: CircleCIProjectKey[];
+    try {
+      projectKeys = await getPaginatedData<CircleCIProjectKey>(
         CIRCLE_TOKEN,
         repo.slug,
         getSSHKeys
-      ),
+      );
+    } catch (error) {
+      projectKeys = [
+        {
+          type: "ERROR: Unable to fetch keys. ",
+          created_at: "error",
+          preferred: "error",
+          fingerprint: "error",
+          public_key: "error",
+          error: `${error}`,
+        },
+      ];
+    }
+
+    accountData.projects.push({
+      name: repo.name,
+      url: `https://app.circleci.com/settings/project/${repo.slug}/environment-variables`,
+      variables: vars,
+      project_keys: projectKeys,
     });
   }
 
