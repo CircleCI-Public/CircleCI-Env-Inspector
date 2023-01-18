@@ -37,8 +37,22 @@ const CIRCLE_TOKEN =
 // Get Collaborations
 const { responseBody: accounts, response: accountsRes } =
   await getCollaborations(CIRCLE_TOKEN);
-if (!accountsRes.ok)
-  exitWithError("Couldn't fetch accounts. Please open an issue.", accountsRes);
+if (!accountsRes.ok) {
+  if (accountsRes.status === 401) {
+    exitWithError(
+      "Invalid CircleCI Token. Please check your token and try again. Ensure you are using a Personal API Token and not a Project API Token.",
+      {
+        status: accountsRes.status,
+        statusText: accountsRes.statusText,
+      }
+    );
+  } else {
+    exitWithError(
+      "Couldn't fetch accounts. Please open an issue.",
+      accountsRes
+    );
+  }
+}
 
 console.log(chalk.bold(`Found ${accounts.length} accounts.`));
 
