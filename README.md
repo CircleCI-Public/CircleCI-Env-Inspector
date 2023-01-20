@@ -14,6 +14,13 @@ An interactive CLI tool for fetching all of your secrets from CircleCI.
 3. Run `run.sh` from the root of the repo
 4. Follow the prompts.
 
+## To Run as an Image
+
+```
+docker run --name circleci-env-inspector -it circlecipublic/cci-env-inspector
+docker cp circleci-env-inspector:/project/circleci-data.json circleci-data.json
+docker container rm circleci-env-inspector
+```
 
 
 https://user-images.githubusercontent.com/33272306/211970169-407a9455-ba34-4de1-a0d0-5a9dd7a8674c.mp4

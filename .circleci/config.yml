@@ -6,3 +6,44 @@ workflows:
     jobs:
       - node/run:
           npm-run: lint
+      - build:
+          name: "Staging"
+          docker-namespace: ccitest
+          docker-repo: cci-env-inspector
+          filters:
+            branches:
+              ignore:
+                - main
+      - build:
+          name: "Deploy"
+          docker-namespace: circlecipublic
+          docker-repo: cci-env-inspector
+          filters:
+            branches:
+              only:
+                - main
+
+
+jobs:
+  build:
+    docker:
+      - image: cimg/base:2023.01
+    parameters:
+      docker-namespace:
+        type: string
+      docker-repo:
+        type: string
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: "20.10.18"
+      - run:
+          name: "Build Docker Images"
+          command: |
+            docker build --file Dockerfile -t << parameters.docker-namespace >>/<< parameters.docker-repo >> .
+            echo 'export DOCKER_PASS=$DOCKER_TOKEN' >> $BASH_ENV
+      - deploy:
+          name: "Publish Docker Images"
+          command: |
+            echo $DOCKER_TOKEN | docker login -u $DOCKER_USER --password-stdin
+            docker push << parameters.docker-namespace >>/<< parameters.docker-repo >>
