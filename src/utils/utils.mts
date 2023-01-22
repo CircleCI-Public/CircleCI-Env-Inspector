@@ -51,9 +51,12 @@ export async function getPaginatedData<T>(
   ) => Promise<{
     response: Response;
     responseBody: CircleCIPaginatedAPIResponse<T>;
-  }>
+  }>,
+  equalityCheck?: (a: T, b: T) => boolean
+
 ) {
-  const items = [];
+  const items: T[] = [];
+
   let pageToken = "";
 
   do {
@@ -62,8 +65,21 @@ export async function getPaginatedData<T>(
       identifier,
       pageToken
     );
-    if (response.ok && responseBody.items.length > 0)
-      items.push(...responseBody.items);
+    if (response.ok && responseBody.items.length > 0) {
+      if (equalityCheck) { // duplicated expected e.g. from the private api
+        const intersection = [];
+        responseBody.items.forEach((item) => {
+          if (items.find((obj) => equalityCheck(obj, item)))
+            intersection.push(item);
+          else
+            items.push(item);
+        });
+        if (intersection.length > 0) // from now on the private api will fetch the same projects over and over again
+          break;
+      } else {
+        items.push(...responseBody.items);
+      }
+    }
     pageToken = responseBody.next_page_token;
   } while (pageToken);
 
