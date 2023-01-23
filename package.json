@@ -10,7 +10,7 @@
     "lint:fix": "eslint src/* --fix",
     "lint": "eslint src/*",
     "start": "npm run build && node dist/index.mjs",
-    "test": "jest"
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "keywords": [],
   "author": "",
