@@ -24,6 +24,7 @@
     "npm": "^9.2.0",
     "ora": "^6.1.2"
   },
+  "type": "module",
   "devDependencies": {
     "@babel/core": "^7.20.12",
     "@babel/preset-env": "^7.20.2",
