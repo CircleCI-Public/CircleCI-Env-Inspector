@@ -122,8 +122,8 @@ for (let index = 0; index < accounts.length; index++) {
   // Fetching Org Project information
   console.log("  " + chalk.italic("Fetching Projects..."));
   // /api/private has a bug where it could return duplicate projects over multiple pages
-  const isSameProject = (prj1 : any, prj2: any) : boolean => {
-    return prj1.id === prj2.id
+  const isSameProject = (prj1: any, prj2: any): boolean => {
+    return prj1.id === prj2.id;
   };
   const RepoList = await getPaginatedData<CircleCIResponseRepo>(
     CIRCLE_TOKEN,
