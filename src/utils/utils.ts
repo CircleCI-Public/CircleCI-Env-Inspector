@@ -86,4 +86,8 @@ export async function getPaginatedData<T>(
   return items;
 }
 
+export function justTesting() {
+  return "justTesting";
+}
+
 export type VCS_TYPE = "github" | "bitbucket" | "circleci";

@@ -6,6 +6,8 @@ workflows:
     jobs:
       - node/run:
           npm-run: lint
+      - node/run:
+          npm-run: test
       - build:
           name: "Staging"
           docker-namespace: ccitest
