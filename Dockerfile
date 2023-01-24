@@ -3,4 +3,4 @@ WORKDIR /project
 COPY . .
 RUN npm install && npm run build
 ENTRYPOINT ["node"]
-CMD ["./dist/index.mjs"]
+CMD ["./dist/index.js"]

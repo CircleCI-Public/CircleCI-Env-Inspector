@@ -4,7 +4,7 @@ import https from "https";
 import fetch from "node-fetch";
 import { Response } from "node-fetch";
 
-import { CircleCIPaginatedAPIResponse } from "./circleci.mjs";
+import { CircleCIPaginatedAPIResponse } from "./circleci";
 
 // Inspired by https://stackoverflow.com/a/62500224
 const httpAgent = new http.Agent({ keepAlive: true });
@@ -53,7 +53,6 @@ export async function getPaginatedData<T>(
     responseBody: CircleCIPaginatedAPIResponse<T>;
   }>,
   equalityCheck?: (a: T, b: T) => boolean
-
 ) {
   const items: T[] = [];
 
@@ -66,15 +65,16 @@ export async function getPaginatedData<T>(
       pageToken
     );
     if (response.ok && responseBody.items.length > 0) {
-      if (equalityCheck) { // duplicated expected e.g. from the private api
+      if (equalityCheck) {
+        // duplicated expected e.g. from the private api
         const intersection = [];
         responseBody.items.forEach((item) => {
           if (items.find((obj) => equalityCheck(obj, item)))
             intersection.push(item);
-          else
-            items.push(item);
+          else items.push(item);
         });
-        if (intersection.length > 0) // from now on the private api will fetch the same projects over and over again
+        if (intersection.length > 0)
+          // from now on the private api will fetch the same projects over and over again
           break;
       } else {
         items.push(...responseBody.items);
