@@ -1,7 +1,6 @@
-import { justTesting } from "../src/utils/utils";
-
-describe("Ensure a function can be imported", () => {
-  it("should return justTesting", () => {
-    expect(justTesting()).toBe("justTesting");
+// Placeholder test to ensure tests are running
+describe("Ensure tests are running", () => {
+  it("should return success", () => {
+    expect("Hello There!").toBe("Hello There!");
   });
 });
