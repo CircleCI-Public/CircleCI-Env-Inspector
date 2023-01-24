@@ -16,8 +16,8 @@ import {
   getContextVariables,
   getProjectVariables,
   getSSHKeys,
-} from "./utils/circleci.mjs";
-import { exitWithError, getPaginatedData } from "./utils/utils.mjs";
+} from "./utils/circleci";
+import { exitWithError, getPaginatedData } from "./utils/utils";
 
 const USER_DATA: CircleCIEnvInspectorReport[] = [];
 

@@ -4,7 +4,7 @@ import https from "https";
 import fetch from "node-fetch";
 import { Response } from "node-fetch";
 
-import { CircleCIPaginatedAPIResponse } from "./circleci.mjs";
+import { CircleCIPaginatedAPIResponse } from "./circleci";
 
 // Inspired by https://stackoverflow.com/a/62500224
 const httpAgent = new http.Agent({ keepAlive: true });
@@ -68,6 +68,10 @@ export async function getPaginatedData<T>(
   } while (pageToken);
 
   return items;
+}
+
+export function justTesting() {
+  return "justTesting";
 }
 
 export type VCS_TYPE = "github" | "bitbucket" | "circleci";
