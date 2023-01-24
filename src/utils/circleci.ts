@@ -1,6 +1,6 @@
 import { Response } from "node-fetch";
 
-import { fetchWithToken, VCS_TYPE } from "./utils.mjs";
+import { fetchWithToken, VCS_TYPE } from "./utils";
 
 export type CircleCIEnvInspectorReport = {
   [name: string]: CircleCIAccountData;
