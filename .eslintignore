@@ -12,4 +12,8 @@ sample
 webpack.config.*
 # don't lint eslintrc
 .eslintrc.cjs
-
+# don't lint tests
+*.test.ts
+tsconfig.json
+tsup.config.ts
+tsconfig.json
