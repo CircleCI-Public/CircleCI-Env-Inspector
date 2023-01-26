@@ -128,3 +128,15 @@ export type CircleCICollabData = {
   contexts: CircleCIContext[];
   projects: CircleCIProject[];
 };
+export type CircleCIEnvInspectorReport = {
+  user: CircleCIUser;
+  accounts: [
+    {
+      name: string;
+      id: string;
+      vcstype: VCS_TYPE;
+      contexts: CircleCIContext[];
+      projects: CircleCIProject[];
+    }
+  ];
+};

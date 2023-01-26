@@ -4,11 +4,19 @@ import inquirer from "inquirer";
 import {
   CircleCI,
   CircleCICollaboration,
+  CircleCIEnvInspectorReport,
   CircleCIUser,
 } from "./utils/CircleCI";
 import { exitOnError } from "./utils/Utils";
 
-const main = async () => {
+type UserInput = {
+  user: CircleCIUser;
+  accounts: CircleCICollaboration[];
+  token: string;
+  client: CircleCI;
+};
+
+const getUserInput = async (): Promise<UserInput> => {
   const CIRCLE_TOKEN =
     process.env.CIRCLE_TOKEN ??
     ((
@@ -21,10 +29,11 @@ const main = async () => {
       ])
     ).CIRCLE_TOKEN as string);
 
-  const CCI = new CircleCI(CIRCLE_TOKEN);
+  const client = new CircleCI(CIRCLE_TOKEN);
 
   // Authenticate
-  const user = (await CCI.getAuthenticatedUser()
+  const user = (await client
+    .getAuthenticatedUser()
     .then((user) => {
       if (!user.name) {
         exitOnError(new Error("No user name returned"));
@@ -40,8 +49,9 @@ const main = async () => {
     })) as CircleCIUser;
 
   // Get all collaborations
-  const collaborations: CircleCICollaboration[] =
-    (await CCI.getCollaborations().catch((e) => {
+  const collaborations: CircleCICollaboration[] = (await client
+    .getCollaborations()
+    .catch((e) => {
       exitOnError(e, "Failed to fetch collaborations");
     })) as CircleCICollaboration[];
   console.log(
@@ -71,9 +81,21 @@ const main = async () => {
     exitOnError(new Error("No collaborations selected"));
   }
 
-  // Loop through selected collaborations
-  for (const collab of selectedCollbs) {
-    const repos = await CCI.getRepos(collab.id);
+  return {
+    user: user,
+    accounts: selectedCollbs,
+    token: CIRCLE_TOKEN,
+    client: client,
+  };
+};
+
+const generateReport = async (
+  userInput: UserInput
+): Promise<CircleCIEnvInspectorReport> => {
+  const { client, user } = userInput;
+  for (const account of userInput.accounts) {
+    const repos = await client.getRepos(account.id);
   }
 };
-main();
+
+getUserInput().then(generateReport);
