@@ -13,8 +13,16 @@ export function printMessage(message: string, title?: string, indent?: number) {
   console.log(chalk.bold(`${indentStyled}${titleStyled} ${message}`));
 }
 
-export function printError(message: string, title?: string, indent?: number) {
-  const titleStyled = title ? chalk.red(title) : "";
+export function printError(
+  message: string,
+  title?: string,
+  isWarning = false,
+  indent?: number
+) {
+  let titleStyled = title ? title : "";
+  isWarning
+    ? (titleStyled = chalk.yellow(titleStyled))
+    : (titleStyled = chalk.red(titleStyled));
   const indentStyled = indent ? " ".repeat(indent) : "";
   console.error(chalk.bold(`${indentStyled}${titleStyled} ${message}`));
 }
