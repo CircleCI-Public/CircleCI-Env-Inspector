@@ -70,7 +70,7 @@ const getUserInput = async (): Promise<UserInput> => {
       },
     ])
   ).collaborations as CircleCIAPICollaboration[];
-  if (!selectedCollbs.length) {
+  if (!selectedCollbs || selectedCollbs.length === 0) {
     exitOnError(new Error("No collaborations selected"));
   }
   printMessage(`${selectedCollbs.length}`, "Accounts selected:");
