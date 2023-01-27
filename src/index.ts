@@ -91,7 +91,7 @@ const generateReport = async (
     user: user,
     accounts: [],
   };
-  for (const account of userInput.accounts) {
+  for (const account of accounts) {
     const accountReport: CircleCIAccountReport = {
       name: account.name,
       id: account.id,
