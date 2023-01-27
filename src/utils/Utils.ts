@@ -24,5 +24,9 @@ export function printError(
     ? (titleStyled = chalk.yellow(titleStyled))
     : (titleStyled = chalk.red(titleStyled));
   const indentStyled = indent ? " ".repeat(indent) : "";
-  console.error(chalk.bold(`${indentStyled}${titleStyled} ${message}`));
+  if (isWarning) {
+    console.warn(chalk.bold(`${indentStyled}${titleStyled} ${message}`));
+  } else {
+    console.error(chalk.bold(`${indentStyled}${titleStyled} ${message}`));
+  }
 }
