@@ -99,7 +99,7 @@ const generateReport = async (
       contexts: [],
       projects: [],
     };
-    const contexts = await client.getContexts(account.id);
+    const contexts = await client.getContexts(account.id, account.slug);
     accountReport.contexts = contexts;
     // const repos = await client.getRepos(account.id);
 

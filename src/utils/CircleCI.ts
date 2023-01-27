@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import https from "https";
 
-import { printMessage } from "./Utils";
+import { printError, printMessage } from "./Utils";
 
 export class CircleCI {
   static readonly endpoint = {
@@ -69,13 +69,37 @@ export class CircleCI {
     return repos;
   }
 
-  async getContexts(orgID: string): Promise<CircleCIContext[]> {
+  async getContexts(orgID: string, slug: string): Promise<CircleCIContext[]> {
     printMessage("...", "Fetching contexts");
+    const contextsReport: CircleCIContext[] = [];
     const contexts = await this._getPaginated<CircleCIAPIContext>(
       `${CircleCI.endpoint.v2}/context?owner-id=${orgID}`
-    );
+    ).catch((e) => {
+      printError(e.message, "Error fetching contexts", false, 2);
+      printError("Skipping contexts", "Warning", true, 2);
+      return [];
+    });
     printMessage(`${contexts.length}`, "Contexts found:");
-    return contexts;
+
+    // Potential here for too many requests
+    const promises = contexts.map(async (context) => {
+      let variables: CircleCIAPIContextVariable[] = [];
+      try {
+        variables = await this._getPaginated<CircleCIAPIContextVariable>(
+          `${CircleCI.endpoint.v2}/context/${context.id}/environment-variable`
+        );
+      } catch (e) {
+        printError(`${e}`, "Error fetching context variables: ", false, 2);
+        printError("Skipping context variables", "Warning: ", true, 2);
+      }
+      contextsReport.push({
+        ...context,
+        url: `https://circleci.com/${slug}/contexts/${context.id}`,
+        variables: variables,
+      });
+    });
+    await Promise.all(promises);
+    return contextsReport;
   }
 }
 
