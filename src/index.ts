@@ -86,7 +86,7 @@ const getUserInput = async (): Promise<UserInput> => {
 const generateReport = async (
   userInput: UserInput
 ): Promise<CircleCIEnvInspectorReport> => {
-  const { client, user } = userInput;
+  const { client, user, accounts } = userInput;
   const report: CircleCIEnvInspectorReport = {
     user: user,
     accounts: [],
