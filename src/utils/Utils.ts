@@ -7,26 +7,30 @@ export function exitOnError(e: Error, title?: string, indent?: number) {
   process.exit(1);
 }
 
-export function printMessage(message: string, title?: string, indent?: number) {
-  const titleStyled = title ? chalk.green(title) : "";
-  const indentStyled = indent ? " ".repeat(indent) : "";
-  console.log(chalk.bold(`${indentStyled}${titleStyled} ${message}`));
-}
-
-export function printError(
+function print(
   message: string,
+  log: Console["warn"] | Console["error"] | Console["log"],
   title?: string,
-  isWarning = false,
   indent?: number
 ) {
   let titleStyled = title ? title : "";
-  isWarning
-    ? (titleStyled = chalk.yellow(titleStyled))
-    : (titleStyled = chalk.red(titleStyled));
+
+  if (log.name === "warn") titleStyled = chalk.yellow(titleStyled);
+  else if (log.name === "error") titleStyled = chalk.red(titleStyled);
+  else titleStyled = chalk.green(titleStyled);
+
   const indentStyled = indent ? " ".repeat(indent) : "";
-  if (isWarning) {
-    console.warn(chalk.bold(`${indentStyled}${titleStyled} ${message}`));
-  } else {
-    console.error(chalk.bold(`${indentStyled}${titleStyled} ${message}`));
-  }
+  log(chalk.bold(`${indentStyled}${titleStyled} ${message}`));
+}
+
+export function printMessage(message: string, title?: string, indent?: number) {
+  print(message, console.log, title, indent);
+}
+
+export function printWarning(message: string, title?: string, indent?: number) {
+  print(message, console.warn, title, indent);
+}
+
+export function printError(message: string, title?: string, indent?: number) {
+  print(message, console.error, title, indent);
 }

@@ -1,7 +1,7 @@
 import axios, { AxiosInstance } from "axios";
 import https from "https";
 
-import { printError, printMessage } from "./Utils";
+import { printError, printMessage, printWarning } from "./Utils";
 
 export class CircleCI {
   static readonly endpoint = {
@@ -75,8 +75,8 @@ export class CircleCI {
     const contexts = await this._getPaginated<CircleCIAPIContext>(
       `${CircleCI.endpoint.v2}/context?owner-id=${orgID}`
     ).catch((e) => {
-      printError(e.message, "Error fetching contexts", false, 2);
-      printError("Skipping contexts", "Warning", true, 2);
+      printError(e.message, "Error fetching contexts", 2);
+      printWarning("Skipping contexts", "Warning", 2);
       return [];
     });
     printMessage(`${contexts.length}`, "Contexts found:");
@@ -93,8 +93,8 @@ export class CircleCI {
           `${CircleCI.endpoint.v2}/context/${contexts[i].id}/environment-variable`
         );
       } catch (e) {
-        printError(`${e}`, "Error fetching context variables: ", false, 2);
-        printError("Skipping context variables", "Warning: ", true, 2);
+        printError(`${e}`, "Error fetching context variables: ", 2);
+        printError("Skipping context variables", "Warning: ", 2);
       }
       contextsReport.push({
         ...contexts[i],
