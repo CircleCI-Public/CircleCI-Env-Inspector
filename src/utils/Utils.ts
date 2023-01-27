@@ -7,3 +7,9 @@ export function exitOnError(e: Error, title?: string) {
   );
   process.exit(1);
 }
+
+export function printMessage(message: string, title?: string, indent?: number) {
+  const titleStyled = title ? chalk.green(title) : "";
+  const indentStyled = indent ? " ".repeat(indent) : "";
+  console.log(chalk.bold(`${indentStyled}${titleStyled} ${message}`));
+}

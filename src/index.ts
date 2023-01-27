@@ -1,13 +1,14 @@
-import chalk from "chalk";
+import { writeFileSync } from "fs";
 import inquirer from "inquirer";
 
 import {
   CircleCI,
+  CircleCIAccountReport,
   CircleCICollaboration,
   CircleCIEnvInspectorReport,
   CircleCIUser,
 } from "./utils/CircleCI";
-import { exitOnError } from "./utils/Utils";
+import { exitOnError, printMessage } from "./utils/Utils";
 
 type UserInput = {
   user: CircleCIUser;
@@ -38,10 +39,7 @@ const getUserInput = async (): Promise<UserInput> => {
       if (!user.name) {
         exitOnError(new Error("No user name returned"));
       }
-      console.log(
-        chalk.bold.green("Successfully authenticated as: "),
-        chalk.bold(user.name)
-      );
+      printMessage(user.name, "Sucessfully authenticated as:");
       return user;
     })
     .catch((e) => {
@@ -54,12 +52,7 @@ const getUserInput = async (): Promise<UserInput> => {
     .catch((e) => {
       exitOnError(e, "Failed to fetch collaborations");
     })) as CircleCICollaboration[];
-  console.log(
-    chalk.bold.green(
-      "Found collaborations: ",
-      chalk.bold(collaborations.length)
-    )
-  );
+  printMessage(`${collaborations.length}`, "Accounts found:");
 
   // Select from collaborations
   const selectedCollbs = (
@@ -80,6 +73,7 @@ const getUserInput = async (): Promise<UserInput> => {
   if (!selectedCollbs.length) {
     exitOnError(new Error("No collaborations selected"));
   }
+  printMessage(`${selectedCollbs.length}`, "Accounts selected:");
 
   return {
     user: user,
@@ -93,9 +87,30 @@ const generateReport = async (
   userInput: UserInput
 ): Promise<CircleCIEnvInspectorReport> => {
   const { client, user } = userInput;
+  const report: CircleCIEnvInspectorReport = {
+    user: user,
+    accounts: [],
+  };
   for (const account of userInput.accounts) {
-    const repos = await client.getRepos(account.id);
+    const accountReport: CircleCIAccountReport = {
+      name: account.name,
+      id: account.id,
+      vcstype: account.vcs_type,
+      contexts: [],
+      projects: [],
+    };
+    const contexts = await client.getContexts(account.id);
+    accountReport.contexts = contexts;
+    // const repos = await client.getRepos(account.id);
+
+    report.accounts.push(accountReport);
   }
+  return report;
 };
 
-getUserInput().then(generateReport);
+// Execute program
+getUserInput().then(async (userInput) => {
+  const report = await generateReport(userInput);
+  writeFileSync("circleci-data.json", JSON.stringify(report, null, 2));
+  printMessage("./circleci-data.json", "Report saved to:");
+});

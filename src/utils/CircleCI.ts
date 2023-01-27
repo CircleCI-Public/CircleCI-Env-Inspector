@@ -1,6 +1,8 @@
 import axios, { AxiosInstance } from "axios";
 import https from "https";
 
+import { printMessage } from "./Utils";
+
 export class CircleCI {
   static readonly endpoint = {
     v1: "https://circleci.com/api/v1.1",
@@ -8,6 +10,7 @@ export class CircleCI {
     private: "https://circleci.com/api/private",
   };
   private _client: AxiosInstance;
+
   constructor(token: string) {
     this._client = axios.create({
       headers: {
@@ -18,12 +21,14 @@ export class CircleCI {
       }),
     });
   }
+
   async getAuthenticatedUser(): Promise<CircleCIUser> {
     const response = await this._client.get<CircleCIUser>(
       `${CircleCI.endpoint.v2}/me`
     );
     return response.data;
   }
+
   /**
    * Fetches paginated data from the CircleCI API
    * @param url - The endpoint to fetch
@@ -62,6 +67,15 @@ export class CircleCI {
       `${CircleCI.endpoint.private}/project?organization-id=${orgID}`
     );
     return repos;
+  }
+
+  async getContexts(orgID: string): Promise<CircleCIContext[]> {
+    printMessage("...", "Fetching contexts");
+    const contexts = await this._getPaginated<CircleCIContext>(
+      `${CircleCI.endpoint.v2}/context?owner-id=${orgID}`
+    );
+    printMessage(`${contexts.length}`, "Contexts found:");
+    return contexts;
   }
 }
 
@@ -130,13 +144,12 @@ export type CircleCICollabData = {
 };
 export type CircleCIEnvInspectorReport = {
   user: CircleCIUser;
-  accounts: [
-    {
-      name: string;
-      id: string;
-      vcstype: VCS_TYPE;
-      contexts: CircleCIContext[];
-      projects: CircleCIProject[];
-    }
-  ];
+  accounts: CircleCIAccountReport[];
+};
+export type CircleCIAccountReport = {
+  name: string;
+  id: string;
+  vcstype: VCS_TYPE;
+  contexts: CircleCIContext[];
+  projects: CircleCIProject[];
 };
