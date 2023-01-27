@@ -81,24 +81,27 @@ export class CircleCI {
     });
     printMessage(`${contexts.length}`, "Contexts found:");
 
-    // Potential here for too many requests
-    const promises = contexts.map(async (context) => {
+    for (let i = 0; i < contexts.length; i++) {
+      printMessage(
+        `${contexts[i].name} ${i + 1}/${contexts.length}`,
+        `Featching variables for:`,
+        2
+      );
       let variables: CircleCIAPIContextVariable[] = [];
       try {
         variables = await this._getPaginated<CircleCIAPIContextVariable>(
-          `${CircleCI.endpoint.v2}/context/${context.id}/environment-variable`
+          `${CircleCI.endpoint.v2}/context/${contexts[i].id}/environment-variable`
         );
       } catch (e) {
         printError(`${e}`, "Error fetching context variables: ", false, 2);
         printError("Skipping context variables", "Warning: ", true, 2);
       }
       contextsReport.push({
-        ...context,
-        url: `https://circleci.com/${slug}/contexts/${context.id}`,
+        ...contexts[i],
+        url: `https://circleci.com/${slug}/contexts/${contexts[i].id}`,
         variables: variables,
       });
-    });
-    await Promise.all(promises);
+    }
     return contextsReport;
   }
 }
