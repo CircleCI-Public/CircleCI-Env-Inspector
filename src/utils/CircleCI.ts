@@ -22,8 +22,8 @@ export class CircleCI {
     });
   }
 
-  async getAuthenticatedUser(): Promise<CircleCIUser> {
-    const response = await this._client.get<CircleCIUser>(
+  async getAuthenticatedUser(): Promise<CircleCIAPIUser> {
+    const response = await this._client.get<CircleCIAPIUser>(
       `${CircleCI.endpoint.v2}/me`
     );
     return response.data;
@@ -48,8 +48,8 @@ export class CircleCI {
     return pagedData;
   }
 
-  async getCollaborations(): Promise<CircleCICollaboration[]> {
-    const { data } = await this._client.get<CircleCICollaboration[]>(
+  async getCollaborations(): Promise<CircleCIAPICollaboration[]> {
+    const { data } = await this._client.get<CircleCIAPICollaboration[]>(
       `${CircleCI.endpoint.v2}/me/collaborations`
     );
     return data;
@@ -62,8 +62,8 @@ export class CircleCI {
    * @param orgID - The organization ID
    * @returns An array of repos
    */
-  async getRepos(orgID: string): Promise<CircleCIRepo[]> {
-    const repos = await this._getPaginated<CircleCIRepo>(
+  async getRepos(orgID: string): Promise<CircleCIAPIRepo[]> {
+    const repos = await this._getPaginated<CircleCIAPIRepo>(
       `${CircleCI.endpoint.private}/project?organization-id=${orgID}`
     );
     return repos;
@@ -71,7 +71,7 @@ export class CircleCI {
 
   async getContexts(orgID: string): Promise<CircleCIContext[]> {
     printMessage("...", "Fetching contexts");
-    const contexts = await this._getPaginated<CircleCIContext>(
+    const contexts = await this._getPaginated<CircleCIAPIContext>(
       `${CircleCI.endpoint.v2}/context?owner-id=${orgID}`
     );
     printMessage(`${contexts.length}`, "Contexts found:");
@@ -80,7 +80,7 @@ export class CircleCI {
 }
 
 // Types
-export type CircleCIUser = {
+export type CircleCIAPIUser = {
   name: string;
   login: string;
   id: string;
@@ -91,39 +91,40 @@ export type CircleCIPaginatedAPIResponse<T> = {
   items: T[];
   next_page_token: string;
 };
-export type CircleCICollaboration = {
+export type CircleCIAPICollaboration = {
   id: string;
   name: string;
   vcs_type: VCS_TYPE;
   avatar_url: string;
   slug: string;
 };
-export type CircleCIContext = {
-  name: string;
+export type CircleCIAPIContext = {
   id: string;
-  url: string;
-  variables: CircleCIContextVariable[];
+  name: string;
+  created_at: string;
 };
-export type CircleCIContextVariable = {
+export interface CircleCIContext extends CircleCIAPIContext {
+  url: string;
+  variables: CircleCIAPIContextVariable[];
+}
+export type CircleCIAPIContextVariable = {
   variable: string;
   context_id: string;
   created_at: string;
-  error?: string;
+  updated_at: string;
 };
-export type CircleCIProjectVariable = {
+export type CircleCIAPIProjectVariable = {
   name: string;
   value: string;
-  error?: string;
 };
-export type CircleCIProjectKey = {
+export type CircleCIAPIProjectKey = {
   type: string;
   preferred: string;
   created_at: string;
   public_key: string;
   fingerprint: string;
-  error?: string;
 };
-export type CircleCIRepo = {
+export type CircleCIAPIRepo = {
   id: string;
   name: string;
   slug: string;
@@ -133,8 +134,8 @@ export type CircleCIProject = {
   id: string;
   name: string;
   slug: string;
-  variables: CircleCIProjectVariable[];
-  keys: CircleCIProjectKey[];
+  variables: CircleCIAPIProjectVariable[];
+  keys: CircleCIAPIProjectKey[];
 };
 export type CircleCICollabData = {
   name: string;
@@ -143,7 +144,7 @@ export type CircleCICollabData = {
   projects: CircleCIProject[];
 };
 export type CircleCIEnvInspectorReport = {
-  user: CircleCIUser;
+  user: CircleCIAPIUser;
   accounts: CircleCIAccountReport[];
 };
 export type CircleCIAccountReport = {

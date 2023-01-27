@@ -4,15 +4,15 @@ import inquirer from "inquirer";
 import {
   CircleCI,
   CircleCIAccountReport,
-  CircleCICollaboration,
+  CircleCIAPICollaboration,
+  CircleCIAPIUser,
   CircleCIEnvInspectorReport,
-  CircleCIUser,
 } from "./utils/CircleCI";
 import { exitOnError, printMessage } from "./utils/Utils";
 
 type UserInput = {
-  user: CircleCIUser;
-  accounts: CircleCICollaboration[];
+  user: CircleCIAPIUser;
+  accounts: CircleCIAPICollaboration[];
   token: string;
   client: CircleCI;
 };
@@ -44,14 +44,14 @@ const getUserInput = async (): Promise<UserInput> => {
     })
     .catch((e) => {
       exitOnError(e, "Failed to authenticate");
-    })) as CircleCIUser;
+    })) as CircleCIAPIUser;
 
   // Get all collaborations
-  const collaborations: CircleCICollaboration[] = (await client
+  const collaborations: CircleCIAPICollaboration[] = (await client
     .getCollaborations()
     .catch((e) => {
       exitOnError(e, "Failed to fetch collaborations");
-    })) as CircleCICollaboration[];
+    })) as CircleCIAPICollaboration[];
   printMessage(`${collaborations.length}`, "Accounts found:");
 
   // Select from collaborations
@@ -69,7 +69,7 @@ const getUserInput = async (): Promise<UserInput> => {
         }),
       },
     ])
-  ).collaborations as CircleCICollaboration[];
+  ).collaborations as CircleCIAPICollaboration[];
   if (!selectedCollbs.length) {
     exitOnError(new Error("No collaborations selected"));
   }
