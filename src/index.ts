@@ -1,14 +1,23 @@
-import chalk from "chalk";
+import { writeFileSync } from "fs";
 import inquirer from "inquirer";
 
 import {
   CircleCI,
-  CircleCICollaboration,
-  CircleCIUser,
+  CircleCIAccountReport,
+  CircleCIAPICollaboration,
+  CircleCIAPIUser,
+  CircleCIEnvInspectorReport,
 } from "./utils/CircleCI";
-import { exitOnError } from "./utils/Utils";
+import { exitOnError, printMessage } from "./utils/Utils";
 
-const main = async () => {
+type UserInput = {
+  user: CircleCIAPIUser;
+  accounts: CircleCIAPICollaboration[];
+  token: string;
+  client: CircleCI;
+};
+
+const getUserInput = async (): Promise<UserInput> => {
   const CIRCLE_TOKEN =
     process.env.CIRCLE_TOKEN ??
     ((
@@ -21,35 +30,29 @@ const main = async () => {
       ])
     ).CIRCLE_TOKEN as string);
 
-  const CCI = new CircleCI(CIRCLE_TOKEN);
+  const client = new CircleCI(CIRCLE_TOKEN);
 
   // Authenticate
-  const user = (await CCI.getAuthenticatedUser()
+  const user = (await client
+    .getAuthenticatedUser()
     .then((user) => {
       if (!user.name) {
         exitOnError(new Error("No user name returned"));
       }
-      console.log(
-        chalk.bold.green("Successfully authenticated as: "),
-        chalk.bold(user.name)
-      );
+      printMessage(user.name, "Sucessfully authenticated as:");
       return user;
     })
     .catch((e) => {
       exitOnError(e, "Failed to authenticate");
-    })) as CircleCIUser;
+    })) as CircleCIAPIUser;
 
   // Get all collaborations
-  const collaborations: CircleCICollaboration[] =
-    (await CCI.getCollaborations().catch((e) => {
+  const collaborations: CircleCIAPICollaboration[] = (await client
+    .getCollaborations()
+    .catch((e) => {
       exitOnError(e, "Failed to fetch collaborations");
-    })) as CircleCICollaboration[];
-  console.log(
-    chalk.bold.green(
-      "Found collaborations: ",
-      chalk.bold(collaborations.length)
-    )
-  );
+    })) as CircleCIAPICollaboration[];
+  printMessage(`${collaborations.length}`, "Accounts found:");
 
   // Select from collaborations
   const selectedCollbs = (
@@ -66,14 +69,48 @@ const main = async () => {
         }),
       },
     ])
-  ).collaborations as CircleCICollaboration[];
-  if (!selectedCollbs.length) {
+  ).collaborations as CircleCIAPICollaboration[];
+  if (!selectedCollbs || selectedCollbs.length === 0) {
     exitOnError(new Error("No collaborations selected"));
   }
+  printMessage(`${selectedCollbs.length}`, "Accounts selected:");
 
-  // Loop through selected collaborations
-  for (const collab of selectedCollbs) {
-    const repos = await CCI.getRepos(collab.id);
-  }
+  return {
+    user: user,
+    accounts: selectedCollbs,
+    token: CIRCLE_TOKEN,
+    client: client,
+  };
 };
-main();
+
+const generateReport = async (
+  userInput: UserInput
+): Promise<CircleCIEnvInspectorReport> => {
+  const { client, user, accounts } = userInput;
+  const report: CircleCIEnvInspectorReport = {
+    user: user,
+    accounts: [],
+  };
+  for (const account of accounts) {
+    const accountReport: CircleCIAccountReport = {
+      name: account.name,
+      id: account.id,
+      vcstype: account.vcs_type,
+      contexts: [],
+      projects: [],
+    };
+    const contexts = await client.getContexts(account.id, account.slug);
+    accountReport.contexts = contexts;
+    // const repos = await client.getRepos(account.id);
+
+    report.accounts.push(accountReport);
+  }
+  return report;
+};
+
+// Execute program
+getUserInput().then(async (userInput) => {
+  const report = await generateReport(userInput);
+  writeFileSync("circleci-data.json", JSON.stringify(report, null, 2));
+  printMessage("./circleci-data.json", "Report saved to:");
+});

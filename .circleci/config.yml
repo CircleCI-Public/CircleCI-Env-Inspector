@@ -6,10 +6,12 @@ workflows:
     jobs:
       - node/run:
           npm-run: lint
+          name: "Lint"
       - node/run:
           npm-run: test
+          name: "Test"
       - build:
-          name: "Staging"
+          name: "Docker Staging"
           docker-namespace: ccitest
           docker-repo: cci-env-inspector
           filters:
@@ -17,7 +19,7 @@ workflows:
               ignore:
                 - main
       - build:
-          name: "Deploy"
+          name: "Docker Deploy"
           docker-namespace: circlecipublic
           docker-repo: cci-env-inspector
           filters:
