@@ -62,11 +62,47 @@ export class CircleCI {
    * @param orgID - The organization ID
    * @returns An array of repos
    */
-  async getRepos(orgID: string): Promise<CircleCIAPIRepo[]> {
+  private async _getRepos(orgID: string): Promise<CircleCIAPIRepo[]> {
     const repos = await this._getPaginated<CircleCIAPIRepo>(
       `${CircleCI.endpoint.private}/project?organization-id=${orgID}`
     );
     return repos;
+  }
+
+  async getProject(slug: string): Promise<CircleCIProject> {
+    const { data } = await this._client.get<CircleCIAPIProject>(
+      `${CircleCI.endpoint.v2}/project/${slug}`
+    );
+    const project: CircleCIProject = {
+      ...data,
+      variables: await this.getProjectVariables(slug),
+      keys: [], //Get project keys
+    };
+    return project;
+  }
+  async getProjectVariables(
+    slug: string
+  ): Promise<CircleCIAPIProjectVariable[]> {
+    const variables = await this._getPaginated<CircleCIAPIProjectVariable>(
+      `${CircleCI.endpoint.v2}/project/${slug}/envvar`
+    );
+    printMessage(`${variables.length}`, "Variables found:", 4);
+    return variables;
+  }
+
+  async getProjects(orgID: string) {
+    const repos = await this._getRepos(orgID);
+    const projects: CircleCIProject[] = [];
+    for (let i = 0; i < repos.length; i++) {
+      printMessage(
+        `${repos[i].name} ${i + 1}/${repos.length}`,
+        "Fetching project details for:",
+        2
+      );
+      const project = await this.getProject(repos[i].slug);
+      projects.push(project);
+    }
+    return projects;
   }
 
   async getContexts(orgID: string, slug: string): Promise<CircleCIContext[]> {
@@ -156,6 +192,19 @@ export type CircleCIAPIRepo = {
   name: string;
   slug: string;
   has_trigger: boolean;
+};
+export type CircleCIAPIProject = {
+  slug: string;
+  name: string;
+  id: string;
+  organization_name: string;
+  organization_id: string;
+  organization_slug: string;
+  vcs_info: {
+    vcs_url: string;
+    provider: VCS_TYPE;
+    default_branch: string;
+  };
 };
 export type CircleCIProject = {
   id: string;
