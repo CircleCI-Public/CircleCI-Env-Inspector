@@ -10,7 +10,7 @@ An interactive CLI tool for fetching all of your secrets from CircleCI.
 
 1. Clone this repo
 2. Obtain a CircleCI API token from https://app.circleci.com/settings/user/tokens
-    - Note: This token must have access to the projects you want to inspect, consider using an org admin account's token
+   - Note: This token must have access to the projects you want to inspect, consider using an org admin account's token
 3. Run `run.sh` from the root of the repo
 4. Follow the prompts.
 
@@ -22,47 +22,113 @@ docker cp circleci-env-inspector:/project/circleci-data.json circleci-data.json
 docker container rm circleci-env-inspector
 ```
 
-
 https://user-images.githubusercontent.com/33272306/211970169-407a9455-ba34-4de1-a0d0-5a9dd7a8674c.mp4
 
-
-
 ## Example Output
-
-```json
+<details>
+  <summary>Click to expand</summary>
+  
+```js
 {
-  "contexts": [
+  user: {
+    name: 'The authenticated user',
+    login: 'my-user',
+    id: 'xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx',
+  },
+  accounts: [
     {
-      "name": "CONTEXT_NAME",
-      "url": "https://app.circleci.com/settings/organization/<VCS>/<ORG>/contexts/<CONTEXT-ID>",
-      "id": "xxx",
-      "variables": [
+      name: 'Account Name',
+      id: 'xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx',
+      vcstype: 'github',
+      contexts: [
         {
-          "variable": "GITHUB_TOKEN",
-          "context_id": "xxx",
-          "created_at": "yyy"
+          name: 'my-context',
+          id: 'xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx',
+          created_at: '2023-01-30T03:13:05.765Z',
+          url: 'https://circleci.com/<slug>/contexts/my-context-id',
+          variables:  [
+            {
+              variable: 'MY_SECRET',
+              updated_at: '2023-01-30T03:13:05.765Z',
+              context_id: 'xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx',
+              created_at: '2023-01-30T03:13:05.765Z',
+            }
+          ]
         }
-      ]
+      ],
     }
   ],
-  "projects": [
-    {
-      "name": "ORG/REPO",
-      "url": "https://app.circleci.com/settings/project/<VCS>/<ORG>/<REPO>/environment-variables",
-      "variables": [{ "name": "VAR", "value": "xxxx" }],
-      "project_keys": [
-        {
-          "type": "deploy-key",
-          "preferred": true,
-          "created_at": "xxx",
-          "public_key": "yyy",
-          "fingerprint": "zzz"
-        }
-          ]
+  projects: [
+    id: 'xxxxxxxx-yyyy-xxxx-yyyy-xxxxxxxxxxxx',
+    name: 'my-project',
+    slug: 'vcs/my-org/my-project',
+    variables: [{
+      name: 'MY_SECRET',
+      value: 'xxxxABC',
+    }],
+    keys: [
+      {
+        type: 'deploy-key | github-user-key',
+        preferred: true,
+        created_at: '2023-01-30T03:13:05.765Z',
+        public_key: 'XXX',
+        fingerprint: 'XXX',
+      }
+    ],
+    legacyAWSKeys: {
+      access_key_id: 'xxx',
+      secret_access_key: 'xxx',
     }
   ]
-
 }
+```
+</details>
+
+## Quick Tips
+
+### Find all projects with Legacy AWS Keys
+
+```bash
+jq '.["projects"] | map(select(has("legacyAWSKeys")) | .slug)' circleci-data.json
+```
+
+**Returns:**
+
+```bash
+[
+  "vcs/my-org/my-project"
+]
+```
+
+**To delete:** https://support.circleci.com/hc/en-us/articles/11990015505947-How-to-remove-legacy-AWS-integration-secrets
+
+(We may build this ability into this tool in the future.)
+
+### Find all Contexts with variables updated in the last 30 days
+
+```bash
+jq '.["accounts"][] | .contexts | map(select(.variables[].updated_at >= (now - 302460*60 | strftime("%Y-%m-%dT%H:%M:%SZ")))) | .[].url' circleci-data.json
+```
+
+**Returns:**
+
+```bash
+"https://circleci.com/<vcs>/<project>/contexts/<id>"
+"https://circleci.com/<vcs>/<project>/contexts/<id>"
+```
+
+### Find all project variables that contain AWS in the name
+
+```bash
+jq '.["projects"] | map(select(.variables[].name | contains("AWS"))) | .[].slug' circleci-data.json
+```
+
+**Returns:**
+
+```bash
+[
+  "vcs/my-org/my-project"
+]
 ```
 
 # F.A.Q.
@@ -70,3 +136,7 @@ https://user-images.githubusercontent.com/33272306/211970169-407a9455-ba34-4de1-
 ## Q: Will this tool return the values of my secrets?
 
 A: **No.** This tool will only return the names of the secrets and as much information as can be provided by the CircleCI APIs. CircleCI _does not_ return the values of secrets through their APIs. The information from this tool is for auditing and key rotation purposes.
+
+## Q: Can I request a feature?
+
+A: **Yes.** Please open an issue or PR!
