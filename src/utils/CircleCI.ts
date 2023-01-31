@@ -76,7 +76,7 @@ export class CircleCI {
     const project: CircleCIProject = {
       ...data,
       variables: await this.getProjectVariables(slug),
-      keys: [], //Get project keys
+      keys: await this.getProjectKeys(slug),
     };
     return project;
   }
@@ -103,6 +103,14 @@ export class CircleCI {
       projects.push(project);
     }
     return projects;
+  }
+
+  async getProjectKeys(slug: string): Promise<CircleCIAPIProjectCheckoutKey[]> {
+    const keys = await this._getPaginated<CircleCIAPIProjectCheckoutKey>(
+      `${CircleCI.endpoint.v2}/project/${slug}/checkout-key`
+    );
+    printMessage(`${keys.length}`, "Keys found:", 4);
+    return keys;
   }
 
   async getContexts(orgID: string, slug: string): Promise<CircleCIContext[]> {
@@ -180,8 +188,8 @@ export type CircleCIAPIProjectVariable = {
   name: string;
   value: string;
 };
-export type CircleCIAPIProjectKey = {
-  type: string;
+export type CircleCIAPIProjectCheckoutKey = {
+  type: "deploy-key" | "github-user-key";
   preferred: string;
   created_at: string;
   public_key: string;
@@ -211,7 +219,7 @@ export type CircleCIProject = {
   name: string;
   slug: string;
   variables: CircleCIAPIProjectVariable[];
-  keys: CircleCIAPIProjectKey[];
+  keys: CircleCIAPIProjectCheckoutKey[];
 };
 export type CircleCICollabData = {
   name: string;
