@@ -120,7 +120,7 @@ export class CircleCI {
     for (let i = 0; i < contexts.length; i++) {
       printMessage(
         `${contexts[i].name} ${i + 1}/${contexts.length}`,
-        `Fetching variables for:`,
+        `Fetching context variables for:`,
         2
       );
       let variables: CircleCIAPIContextVariable[] = [];
