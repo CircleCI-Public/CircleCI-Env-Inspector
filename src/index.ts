@@ -101,6 +101,7 @@ const generateReport = async (
     };
     accountReport.contexts = await client.getContexts(account.id, account.slug);
     accountReport.projects = await client.getProjects(account.id);
+
     report.accounts.push(accountReport);
   }
   return report;

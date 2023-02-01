@@ -69,6 +69,24 @@ export class CircleCI {
     return repos;
   }
 
+  async getLegacyAWSKeys(slug: string): Promise<CircleCILegacyAWSKeyPair> {
+    const {
+      data: {
+        aws: { keypair },
+      },
+    } = await this._client.get<CircleCIAPIv1ProjectSettings>(
+      `${CircleCI.endpoint.v1}/project/${slug}/settings`
+    );
+    if (keypair) {
+      printError(
+        "You have legacy AWS credentials stored in this project. We recommend immediately deleting these keys.",
+        "Legacy AWS Keys Found!:",
+        4
+      );
+    }
+    return keypair;
+  }
+
   async getProject(slug: string): Promise<CircleCIProject> {
     const { data } = await this._client.get<CircleCIAPIProject>(
       `${CircleCI.endpoint.v2}/project/${slug}`
@@ -77,6 +95,7 @@ export class CircleCI {
       ...data,
       variables: await this.getProjectVariables(slug),
       keys: await this.getProjectKeys(slug),
+      legacyAWSKeys: await this.getLegacyAWSKeys(slug),
     };
     return project;
   }
@@ -220,6 +239,7 @@ export type CircleCIProject = {
   slug: string;
   variables: CircleCIAPIProjectVariable[];
   keys: CircleCIAPIProjectCheckoutKey[];
+  legacyAWSKeys: CircleCILegacyAWSKeyPair;
 };
 export type CircleCICollabData = {
   name: string;
@@ -237,4 +257,15 @@ export type CircleCIAccountReport = {
   vcstype: VCS_TYPE;
   contexts: CircleCIContext[];
   projects: CircleCIProject[];
+};
+export type CircleCIAPIv1ProjectSettings = {
+  aws: {
+    keypair: CircleCILegacyAWSKeyPair;
+  };
+  vcstype: VCS_TYPE;
+  slack_webhook_url: string;
+};
+export type CircleCILegacyAWSKeyPair = {
+  access_key_id: string;
+  secret_access_key: string;
 };
