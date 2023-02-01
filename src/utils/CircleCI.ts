@@ -63,10 +63,43 @@ export class CircleCI {
    * @returns An array of repos
    */
   private async _getRepos(orgID: string): Promise<CircleCIAPIRepo[]> {
-    const repos = await this._getPaginated<CircleCIAPIRepo>(
-      `${CircleCI.endpoint.private}/project?organization-id=${orgID}`
-    );
-    return repos;
+    // Bugfix: Reported in #44 (https://github.com/CircleCI-Public/CircleCI-Env-Inspector/pull/44)
+    // CircleCI's /api/private/project endpoint appears to have a bug where a small
+    //   number of users are seeing paginated results returned in an infinite loop.
+    // This special case is to prevent that from happening.
+    // This code is what would be normally used to fetch repos
+    // const repos = await this._getPaginated<CircleCIAPIRepo>(
+    //   `${CircleCI.endpoint.private}/project?organization-id=${orgID}`
+    // );
+    // return repos;
+    const pagedData: CircleCIAPIRepo[] = [];
+    const intersection: CircleCIAPIRepo[] = [];
+    const url = `${CircleCI.endpoint.private}/project?organization-id=${orgID}`;
+    let pageToken;
+    do {
+      const remote: string = pageToken ? `${url}&page-token=${pageToken}` : url;
+      const {
+        data: { items, next_page_token },
+      } = await this._client.get<CircleCIPaginatedAPIResponse<CircleCIAPIRepo>>(
+        remote
+      );
+      for (const item of items) {
+        if (pagedData.find((i) => i.slug === item.slug)) {
+          intersection.push(item);
+        } else {
+          pagedData.push(item);
+        }
+      }
+      if (intersection.length > 0) {
+        printWarning(
+          "The API appears to be returning duplicate repos. This is a known bug. Please contact support. We have stopped fetching repositories to prevent an infinite loop.",
+          "API Error:"
+        );
+        break;
+      }
+      pageToken = next_page_token;
+    } while (pageToken);
+    return pagedData;
   }
 
   async getLegacyAWSKeys(slug: string): Promise<CircleCILegacyAWSKeyPair> {
