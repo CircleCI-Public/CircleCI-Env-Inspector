@@ -19,6 +19,7 @@ export class CircleCI {
       httpsAgent: new https.Agent({
         keepAlive: true,
       }),
+      maxRedirects: 3,
     });
   }
 
