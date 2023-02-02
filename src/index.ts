@@ -49,6 +49,9 @@ const getUserInput = async (): Promise<UserInput> => {
   // Get all collaborations
   const collaborations: CircleCIAPICollaboration[] = (await client
     .getCollaborations()
+    .then((collaborations) =>
+      collaborations.filter((collaboration) => collaboration.id)
+    )
     .catch((e) => {
       exitOnError(e, "Failed to fetch collaborations");
     })) as CircleCIAPICollaboration[];
