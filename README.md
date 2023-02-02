@@ -2,27 +2,33 @@
 
 An interactive CLI tool for fetching all of your secrets from CircleCI.
 
-## Pre-requisites
+https://user-images.githubusercontent.com/33272306/211970169-407a9455-ba34-4de1-a0d0-5a9dd7a8674c.mp4
 
-- Docker
+## How to Run
 
-## To Run
+You will need to first obtain a CircleCI Personal Access token from https://app.circleci.com/settings/user/tokens
+  - Note: This token must have access to the projects you want to inspect, consider using an org admin account's token
+
+### To Run With DockerHub Image
+
+1. Run the container
+    - `docker run --name circleci-env-inspector -it circlecipublic/cci-env-inspector`
+2. Follow the prompts and select which accounts you want to inspect.
+3. Copy the generated report from the container
+    - `docker cp circleci-env-inspector:/project/circleci-data.json circleci-data.json`
+
+### To Run With Node
+It is recommended to use Node version 18.10.
+1. Clone this repo
+2. Run `npm install`
+3. Run `npm start`
+4. Follow the prompts and select which accounts you want to inspect.
+
+### To Build and Run Locally (Podman / Docker)
 
 1. Clone this repo
-2. Obtain a CircleCI API token from https://app.circleci.com/settings/user/tokens
-   - Note: This token must have access to the projects you want to inspect, consider using an org admin account's token
-3. Run `run.sh` from the root of the repo
-4. Follow the prompts.
-
-## To Run as an Image
-
-```
-docker run --name circleci-env-inspector -it circlecipublic/cci-env-inspector
-docker cp circleci-env-inspector:/project/circleci-data.json circleci-data.json
-docker container rm circleci-env-inspector
-```
-
-https://user-images.githubusercontent.com/33272306/211970169-407a9455-ba34-4de1-a0d0-5a9dd7a8674c.mp4
+2. Run `run.sh` from the root of the repo
+3. Follow the prompts and select which accounts you want to inspect.
 
 ## Example Output
 <details>
