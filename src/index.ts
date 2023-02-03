@@ -8,7 +8,7 @@ import {
   CircleCIAPIUser,
   CircleCIEnvInspectorReport,
 } from "./utils/CircleCI";
-import { exitOnError, printMessage } from "./utils/Utils";
+import { exitWithError, printMessage } from "./utils/Utils";
 
 type UserInput = {
   user: CircleCIAPIUser;
@@ -37,13 +37,13 @@ const getUserInput = async (): Promise<UserInput> => {
     .getAuthenticatedUser()
     .then((user) => {
       if (!user.name) {
-        exitOnError(new Error("No user name returned"));
+        exitWithError(new Error("No user name returned"));
       }
       printMessage(user.name, "Sucessfully authenticated as:");
       return user;
     })
     .catch((e) => {
-      exitOnError(e, "Failed to authenticate");
+      exitWithError(e, "Failed to authenticate");
     })) as CircleCIAPIUser;
 
   // Get all collaborations
@@ -53,7 +53,7 @@ const getUserInput = async (): Promise<UserInput> => {
       collaborations.filter((collaboration) => collaboration.id)
     )
     .catch((e) => {
-      exitOnError(e, "Failed to fetch collaborations");
+      exitWithError(e, "Failed to fetch collaborations");
     })) as CircleCIAPICollaboration[];
   printMessage(`${collaborations.length}`, "Accounts found:");
 
@@ -74,7 +74,7 @@ const getUserInput = async (): Promise<UserInput> => {
     ])
   ).collaborations as CircleCIAPICollaboration[];
   if (!selectedCollbs || selectedCollbs.length === 0) {
-    exitOnError(new Error("No collaborations selected"));
+    exitWithError(new Error("No collaborations selected"));
   }
   printMessage(`${selectedCollbs.length}`, "Accounts selected:");
 
@@ -101,8 +101,13 @@ const generateReport = async (
       vcstype: account.vcs_type,
       contexts: [],
       projects: [],
+      errors: [],
     };
-    accountReport.contexts = await client.getContexts(account.id, account.slug);
+    const contextData = await client.getContexts(account.id, account.slug);
+    accountReport.contexts = contextData.contextsReport;
+    if (contextData.errors.length > 0) {
+      accountReport.errors.push(...contextData.errors);
+    }
     accountReport.projects = await client.getProjects(account.id);
 
     report.accounts.push(accountReport);

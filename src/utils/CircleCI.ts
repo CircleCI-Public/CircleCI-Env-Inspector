@@ -1,7 +1,13 @@
-import axios, { AxiosInstance } from "axios";
+import axios, { AxiosError, AxiosInstance } from "axios";
 import https from "https";
 
-import { printError, printMessage, printWarning } from "./Utils";
+import {
+  getAxiosError,
+  printAxiosError,
+  printError,
+  printMessage,
+  printWarning,
+} from "./Utils";
 
 export class CircleCI {
   static readonly endpoint = {
@@ -19,6 +25,7 @@ export class CircleCI {
       httpsAgent: new https.Agent({
         keepAlive: true,
       }),
+      maxRedirects: 3,
     });
   }
 
@@ -92,8 +99,7 @@ export class CircleCI {
       }
       if (intersection.length > 0) {
         printWarning(
-          "The API appears to be returning duplicate repos. This is a known bug. Please contact support. We have stopped fetching repositories to prevent an infinite loop.",
-          "API Error:"
+          "The API appears to be returning duplicate repos. This is a known bug. Please contact support. We have stopped fetching repositories to prevent an infinite loop."
         );
         break;
       }
@@ -165,14 +171,25 @@ export class CircleCI {
     return keys;
   }
 
-  async getContexts(orgID: string, slug: string): Promise<CircleCIContext[]> {
+  getContextUrl(slug: string, contextID: string) {
+    return `https://circleci.com/${slug}/contexts/${contextID}`;
+  }
+
+  async getContexts(orgID: string, slug: string) {
+    const errors: ContextVariableError[] = [];
     printMessage("...", "Fetching contexts");
     const contextsReport: CircleCIContext[] = [];
     const contexts = await this._getPaginated<CircleCIAPIContext>(
       `${CircleCI.endpoint.v2}/context?owner-id=${orgID}`
     ).catch((e) => {
-      printError(e.message, "Error fetching contexts", 2);
-      printWarning("Skipping contexts", "Warning", 2);
+      const error = getAxiosError(e);
+      printAxiosError(error, 2);
+      printWarning("Skipping contexts", 2);
+      errors.push({
+        contextName: "",
+        url: "",
+        error: error,
+      });
       return [];
     });
     printMessage(`${contexts.length}`, "Contexts found:");
@@ -183,22 +200,30 @@ export class CircleCI {
         `Fetching context variables for:`,
         2
       );
-      let variables: CircleCIAPIContextVariable[] = [];
-      try {
-        variables = await this._getPaginated<CircleCIAPIContextVariable>(
+      const variables: CircleCIAPIContextVariable[] =
+        await this._getPaginated<CircleCIAPIContextVariable>(
           `${CircleCI.endpoint.v2}/context/${contexts[i].id}/environment-variable`
-        );
-      } catch (e) {
-        printError(`${e}`, "Error fetching context variables: ", 2);
-        printError("Skipping context variables", "Warning: ", 2);
-      }
+        ).catch((e) => {
+          const error = getAxiosError(e);
+          printAxiosError(error, 2);
+          printWarning("Skipping context variables", 2);
+          errors.push({
+            contextName: contexts[i].name,
+            url: this.getContextUrl(slug, contexts[i].id),
+            error: error,
+          });
+          return [];
+        });
       contextsReport.push({
         ...contexts[i],
-        url: `https://circleci.com/${slug}/contexts/${contexts[i].id}`,
+        url: this.getContextUrl(slug, contexts[i].id),
         variables: variables,
       });
     }
-    return contextsReport;
+    return {
+      errors,
+      contextsReport,
+    };
   }
 }
 
@@ -290,6 +315,7 @@ export type CircleCIAccountReport = {
   vcstype: VCS_TYPE;
   contexts: CircleCIContext[];
   projects: CircleCIProject[];
+  errors: unknown[];
 };
 export type CircleCIAPIv1ProjectSettings = {
   aws: {
@@ -301,4 +327,10 @@ export type CircleCIAPIv1ProjectSettings = {
 export type CircleCILegacyAWSKeyPair = {
   access_key_id: string;
   secret_access_key: string;
+};
+
+export type ContextVariableError = {
+  contextName: string;
+  url: string;
+  error: Error | AxiosError;
 };
