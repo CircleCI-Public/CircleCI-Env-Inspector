@@ -14,9 +14,9 @@ describe("printMessage", () => {
 describe("printWarning", () => {
   it("should call console.warn with the correct message", () => {
     const spy = jest.spyOn(console, "warn");
-    printWarning("A warning occurred", "Warning", 2);
+    printWarning("A warning occurred", 2);
     expect(stripAnsi(spy.mock.calls[0][0])).toEqual(
-      "  Warning A warning occurred"
+      "  Warning: A warning occurred"
     );
     spy.mockRestore();
   });
