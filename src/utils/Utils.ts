@@ -1,6 +1,8 @@
 import axios, { AxiosError } from "axios";
 import chalk from "chalk";
 
+import { AxiosErrorMinimal } from "./CircleCI";
+
 export function exitWithError(e: Error, title?: string) {
   printError(e.message, title);
   process.exit(1);
@@ -58,4 +60,14 @@ export function printAxiosError(
     title,
     indent
   );
+}
+
+export function createMinimalAxiosError(error: AxiosError): AxiosErrorMinimal {
+  return {
+    status: error.response?.status ?? 1,
+    statusText: error.response?.statusText ?? "Unknown",
+    url: error.config?.url ?? "Unknown",
+    message: error.message ?? "Unknown",
+    code: error.code ?? "Unknown",
+  };
 }
