@@ -127,15 +127,50 @@ export class CircleCI {
   }
 
   async getProject(slug: string): Promise<CircleCIProject> {
+    const errors: ProjectError[] = [];
     const { data } = await this._client.get<CircleCIAPIProject>(
       `${CircleCI.endpoint.v2}/project/${slug}`
     );
+    const variables: CircleCIAPIProjectVariable[] =
+      await this.getProjectVariables(slug).catch((e) => {
+        const error = getAxiosError(e);
+        printAxiosError(error, 4, "Failed to fetch project variables");
+        errors.push({
+          projectSlug: slug,
+          url: `https://app.circleci.com/settings/project/${slug}/environment-variables`,
+          error,
+        });
+        return [];
+      });
+    const projectKeys: CircleCIAPIProjectCheckoutKey[] =
+      await this.getProjectKeys(slug).catch((e) => {
+        const error = getAxiosError(e);
+        printAxiosError(error, 4, "Failed to fetch project keys");
+        errors.push({
+          projectSlug: slug,
+          url: `https://app.circleci.com/settings/project/${slug}/ssh`,
+          error,
+        });
+        return [];
+      });
+    const legacyAWSKeys = await this.getLegacyAWSKeys(slug).catch((e) => {
+      const error = getAxiosError(e);
+      printAxiosError(error, 4, "Failed to fetch legacy AWS keys");
+      errors.push({
+        projectSlug: slug,
+        url: `https://app.circleci.com/settings/project/${slug}/`,
+        error,
+      });
+      return undefined;
+    });
     const project: CircleCIProject = {
       ...data,
-      variables: await this.getProjectVariables(slug),
-      keys: await this.getProjectKeys(slug),
-      legacyAWSKeys: await this.getLegacyAWSKeys(slug),
+      variables: variables,
+      keys: projectKeys,
     };
+    if (legacyAWSKeys) {
+      project.legacyAWSKeys = legacyAWSKeys;
+    }
     return project;
   }
   async getProjectVariables(
@@ -297,7 +332,7 @@ export type CircleCIProject = {
   slug: string;
   variables: CircleCIAPIProjectVariable[];
   keys: CircleCIAPIProjectCheckoutKey[];
-  legacyAWSKeys: CircleCILegacyAWSKeyPair;
+  legacyAWSKeys?: CircleCILegacyAWSKeyPair;
 };
 export type CircleCICollabData = {
   name: string;
@@ -331,6 +366,12 @@ export type CircleCILegacyAWSKeyPair = {
 
 export type ContextVariableError = {
   contextName: string;
+  url: string;
+  error: Error | AxiosError;
+};
+
+export type ProjectError = {
+  projectSlug: string;
   url: string;
   error: Error | AxiosError;
 };
