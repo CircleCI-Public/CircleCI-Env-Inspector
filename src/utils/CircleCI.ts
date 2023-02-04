@@ -171,6 +171,9 @@ export class CircleCI {
     if (legacyAWSKeys) {
       project.legacyAWSKeys = legacyAWSKeys;
     }
+    if (errors.length > 0) {
+      project.errors = errors;
+    }
     return project;
   }
   async getProjectVariables(
@@ -333,6 +336,7 @@ export type CircleCIProject = {
   variables: CircleCIAPIProjectVariable[];
   keys: CircleCIAPIProjectCheckoutKey[];
   legacyAWSKeys?: CircleCILegacyAWSKeyPair;
+  errors?: ProjectError[];
 };
 export type CircleCICollabData = {
   name: string;
