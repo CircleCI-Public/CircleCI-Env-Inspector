@@ -2,6 +2,7 @@ import axios, { AxiosError, AxiosInstance } from "axios";
 import https from "https";
 
 import {
+  createMinimalAxiosError,
   getAxiosError,
   printAxiosError,
   printError,
@@ -127,15 +128,57 @@ export class CircleCI {
   }
 
   async getProject(slug: string): Promise<CircleCIProject> {
+    const errors: ProjectError[] = [];
     const { data } = await this._client.get<CircleCIAPIProject>(
       `${CircleCI.endpoint.v2}/project/${slug}`
     );
+    const variables: CircleCIAPIProjectVariable[] =
+      await this.getProjectVariables(slug).catch((e) => {
+        const error = getAxiosError(e);
+        printAxiosError(error, 4, "Failed to fetch project variables");
+        const projectError: ProjectError = {
+          projectSlug: slug,
+          url: `https://app.circleci.com/settings/project/${slug}/environment-variables`,
+          error: createMinimalAxiosError(error),
+        };
+        errors.push(projectError);
+        return [];
+      });
+    const projectKeys: CircleCIAPIProjectCheckoutKey[] =
+      await this.getProjectKeys(slug).catch((e) => {
+        const error = getAxiosError(e);
+        printAxiosError(error, 4, "Failed to fetch project keys");
+        const projectError: ProjectError = {
+          projectSlug: slug,
+          url: `https://app.circleci.com/settings/project/${slug}/ssh`,
+          error: createMinimalAxiosError(error),
+        };
+        errors.push(projectError);
+        return [];
+      });
+    const legacyAWSKeys = await this.getLegacyAWSKeys(slug).catch((e) => {
+      const error = getAxiosError(e);
+
+      printAxiosError(error, 4, "Failed to fetch legacy AWS keys");
+      const projectError: ProjectError = {
+        projectSlug: slug,
+        url: `https://app.circleci.com/settings/project/${slug}/`,
+        error: createMinimalAxiosError(error),
+      };
+      errors.push(projectError);
+      return undefined;
+    });
     const project: CircleCIProject = {
       ...data,
-      variables: await this.getProjectVariables(slug),
-      keys: await this.getProjectKeys(slug),
-      legacyAWSKeys: await this.getLegacyAWSKeys(slug),
+      variables: variables,
+      keys: projectKeys,
     };
+    if (legacyAWSKeys) {
+      project.legacyAWSKeys = legacyAWSKeys;
+    }
+    if (errors.length > 0) {
+      project.errors = errors;
+    }
     return project;
   }
   async getProjectVariables(
@@ -188,7 +231,7 @@ export class CircleCI {
       errors.push({
         contextName: "",
         url: "",
-        error: error,
+        error: createMinimalAxiosError(error),
       });
       return [];
     });
@@ -210,7 +253,7 @@ export class CircleCI {
           errors.push({
             contextName: contexts[i].name,
             url: this.getContextUrl(slug, contexts[i].id),
-            error: error,
+            error: createMinimalAxiosError(error),
           });
           return [];
         });
@@ -297,7 +340,8 @@ export type CircleCIProject = {
   slug: string;
   variables: CircleCIAPIProjectVariable[];
   keys: CircleCIAPIProjectCheckoutKey[];
-  legacyAWSKeys: CircleCILegacyAWSKeyPair;
+  legacyAWSKeys?: CircleCILegacyAWSKeyPair;
+  errors?: ProjectError[];
 };
 export type CircleCICollabData = {
   name: string;
@@ -332,5 +376,19 @@ export type CircleCILegacyAWSKeyPair = {
 export type ContextVariableError = {
   contextName: string;
   url: string;
-  error: Error | AxiosError;
+  error: AxiosErrorMinimal;
+};
+
+export type ProjectError = {
+  projectSlug: string;
+  url: string;
+  error: AxiosErrorMinimal;
+};
+
+export type AxiosErrorMinimal = {
+  message: string;
+  code: string;
+  status: number;
+  statusText: string;
+  url: string;
 };
