@@ -12,6 +12,8 @@ You will need to first obtain a CircleCI Personal Access token from https://app.
 
 ### To Run With DockerHub Image
 
+[![Docker Image Version (latest by date)](https://img.shields.io/docker/v/circlecipublic/cci-env-inspector?logo=docker)](https://hub.docker.com/r/circlecipublic/cci-env-inspector/tags)
+
 1. Run the container.
    - `docker run --name circleci-env-inspector -it circlecipublic/cci-env-inspector`
 2. Follow the prompts and select which accounts you want to inspect.
