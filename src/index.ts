@@ -1,5 +1,6 @@
 import { writeFileSync } from "fs";
 import inquirer from "inquirer";
+import path from "path";
 
 import {
   CircleCI,
@@ -118,6 +119,10 @@ const generateReport = async (
 // Execute program
 getUserInput().then(async (userInput) => {
   const report = await generateReport(userInput);
-  writeFileSync("circleci-data.json", JSON.stringify(report, null, 2));
-  printMessage("./circleci-data.json", "Report saved to:");
+  const reportPath = path.join(
+    process.env.REPORT_PATH ?? "./",
+    "circleci-data.json"
+  );
+  writeFileSync(reportPath, JSON.stringify(report, null, 2));
+  printMessage(reportPath, "Report saved to:");
 });
