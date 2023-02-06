@@ -148,6 +148,12 @@ jq '.["projects"] | map(select(.variables[].name | contains("AWS"))) | .[].slug'
 
 A: **No.** This tool will only return the names of the secrets and as much information as can be provided by the CircleCI APIs. CircleCI _does not_ return the values of secrets through their APIs. The information from this tool is for auditing and key rotation purposes.
 
+### Q: What are these 404 and 403 errors I'm seeing?
+
+A: When running this tool with your personal access token, it will probe all accounts and projects within that you _currently_ have an affiliation with. The errors are likely expected and inform you that you may not have access in the case of a 403, or that the project or account no longer exists in the case of a 404. If you are seeing a 403 error, it may still be possible that you had access to the project at one point in the past.
+
+This tool is useful for auditing your personal access. To fully audit an organization, you will need to use an org admin account's token.
+
 ### Q: Can I request a feature?
 
 A: **Yes.** Please open an issue or PR!
