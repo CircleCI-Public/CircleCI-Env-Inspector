@@ -7,18 +7,23 @@ https://user-images.githubusercontent.com/33272306/211970169-407a9455-ba34-4de1-
 ## How to Run
 
 You will need to first obtain a CircleCI Personal Access token from https://app.circleci.com/settings/user/tokens
-  - Note: This token must have access to the projects you want to inspect, consider using an org admin account's token
+
+- Note: This token must have access to the projects you want to inspect, consider using an org admin account's token
 
 ### To Run With DockerHub Image
 
-1. Run the container
-    - `docker run --name circleci-env-inspector -it circlecipublic/cci-env-inspector`
+[![Docker Image Version (latest by date)](https://img.shields.io/docker/v/circlecipublic/cci-env-inspector?logo=docker)](https://hub.docker.com/r/circlecipublic/cci-env-inspector/tags)
+
+1. Run the container.
+   - `docker run --name circleci-env-inspector -it circlecipublic/cci-env-inspector`
 2. Follow the prompts and select which accounts you want to inspect.
-3. Copy the generated report from the container
-    - `docker cp circleci-env-inspector:/project/circleci-data.json circleci-data.json`
+3. Copy the generated report from the container.
+   - `docker cp circleci-env-inspector:/project/circleci-data.json circleci-data.json`
 
 ### To Run With Node
+
 It is recommended to use Node version 18.10.
+
 1. Clone this repo
 2. Run `npm install`
 3. Run `npm start`
@@ -31,6 +36,7 @@ It is recommended to use Node version 18.10.
 3. Follow the prompts and select which accounts you want to inspect.
 
 ## Example Output
+
 <details>
   <summary>Click to expand</summary>
   
@@ -88,6 +94,7 @@ It is recommended to use Node version 18.10.
   ]
 }
 ```
+
 </details>
 
 ## Quick Tips
@@ -137,12 +144,18 @@ jq '.["projects"] | map(select(.variables[].name | contains("AWS"))) | .[].slug'
 ]
 ```
 
-# F.A.Q.
+## F.A.Q.
 
-## Q: Will this tool return the values of my secrets?
+### Q: Will this tool return the values of my secrets?
 
 A: **No.** This tool will only return the names of the secrets and as much information as can be provided by the CircleCI APIs. CircleCI _does not_ return the values of secrets through their APIs. The information from this tool is for auditing and key rotation purposes.
 
-## Q: Can I request a feature?
+### Q: What are these 404 and 403 errors I'm seeing?
+
+A: When running this tool with your personal access token, it will probe all accounts and projects within that you _currently_ have an affiliation with. The errors are likely expected and inform you that you may not have access in the case of a 403, or that the project or account no longer exists in the case of a 404. If you are seeing a 403 error, it may still be possible that you had access to the project at one point in the past.
+
+This tool is useful for auditing your personal access. To fully audit an organization, you will need to use an org admin account's token.
+
+### Q: Can I request a feature?
 
 A: **Yes.** Please open an issue or PR!
