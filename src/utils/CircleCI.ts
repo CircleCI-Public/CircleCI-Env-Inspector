@@ -31,9 +31,13 @@ export class CircleCI {
   }
 
   async getAuthenticatedUser(): Promise<CircleCIAPIUser> {
-    const response = await this._client.get<CircleCIAPIUser>(
-      `${CircleCI.endpoint.v2}/me`
-    );
+    const response = await this._client
+      .get<CircleCIAPIUser>(`${CircleCI.endpoint.v2}/me`)
+      .catch((e) => {
+        const error = getAxiosError(e);
+        printAxiosError(error, 2, "Authentication failed:");
+        throw error;
+      });
     return response.data;
   }
 

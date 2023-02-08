@@ -37,13 +37,13 @@ const getUserInput = async (): Promise<UserInput> => {
     .getAuthenticatedUser()
     .then((user) => {
       if (!user.name) {
-        exitWithError(new Error("No user name returned"));
+        exitWithError(new Error(JSON.stringify(user)), "No username returned");
       }
-      printMessage(user.name, "Sucessfully authenticated as:");
+      printMessage(user.name, "Successfully authenticated as:");
       return user;
     })
     .catch((e) => {
-      exitWithError(e, "Failed to authenticate");
+      exitWithError(e, "Fatally failed to authenticate:");
     })) as CircleCIAPIUser;
 
   // Get all collaborations
