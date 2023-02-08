@@ -36,10 +36,10 @@ const getUserInput = async (): Promise<UserInput> => {
   const user = (await client
     .getAuthenticatedUser()
     .then((user) => {
-      if (!user.name) {
+      if (!user.name && !user.login) {
         exitWithError(new Error(JSON.stringify(user)), "No username returned");
       }
-      printMessage(user.name, "Successfully authenticated as:");
+      printMessage(user.name ?? user.login, "Successfully authenticated as:");
       return user;
     })
     .catch((e) => {
