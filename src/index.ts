@@ -66,7 +66,10 @@ const getUserInput = async (): Promise<UserInput> => {
         message: "Select accounts: \n",
         choices: collaborations.map((collab) => {
           return {
-            name: ` ${collab.slug}`,
+            name:
+              collab.vcs_type == "circleci"
+                ? ` gl/${collab.name}`
+                : ` ${collab.slug}`,
             value: collab,
           };
         }),
