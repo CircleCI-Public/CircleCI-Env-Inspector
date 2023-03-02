@@ -5,7 +5,6 @@ import {
   createMinimalAxiosError,
   getAxiosError,
   printAxiosError,
-  printError,
   printMessage,
   printWarning,
 } from "./Utils";
@@ -113,86 +112,52 @@ export class CircleCI {
     return pagedData;
   }
 
-  async getLegacyAWSKeys(slug: string): Promise<CircleCILegacyAWSKeyPair> {
-    const {
-      data: {
-        aws: { keypair },
-      },
-    } = await this._client.get<CircleCIAPIv1ProjectSettings>(
-      `${CircleCI.endpoint.v1}/project/${slug}/settings`
-    );
-    if (keypair) {
-      printError(
-        "You have legacy AWS credentials stored in this project. We recommend immediately deleting these keys.",
-        "Legacy AWS Keys Found!:",
-        4
-      );
-    }
-    return keypair;
-  }
-
   async getProject(slug: string): Promise<CircleCIProject> {
     const errors: ProjectError[] = [];
-    const { data } = await this._client.get<CircleCIAPIProject>(
-      `${CircleCI.endpoint.v2}/project/${slug}`
-    );
-    const variables: CircleCIAPIProjectVariable[] =
-      await this.getProjectVariables(slug).catch((e) => {
+    const { data: projectMeta } = await this._client
+      .get<CircleCIAPIProject>(`${CircleCI.endpoint.v2}/project/${slug}`)
+      .catch((e) => {
         const error = getAxiosError(e);
-        printAxiosError(error, 4, "Failed to fetch project variables");
-        const projectError: ProjectError = {
-          projectSlug: slug,
-          url: `https://app.circleci.com/settings/project/${slug}/environment-variables`,
+        printAxiosError(error, 2);
+        errors.push({
           error: createMinimalAxiosError(error),
-        };
-        errors.push(projectError);
-        return [];
+          projectSlug: slug,
+          url: `${CircleCI.endpoint.v2}/project/${slug}`,
+        });
+        throw error;
       });
-    const projectKeys: CircleCIAPIProjectCheckoutKey[] =
-      await this.getProjectKeys(slug).catch((e) => {
+    const { data: projectSecrets } = await this._client
+      .get<CircleCIAPIPrivateProject>(
+        `${CircleCI.endpoint.private}/project/${projectMeta.id}?include-deleted=true`
+      )
+      .catch((e) => {
         const error = getAxiosError(e);
-        printAxiosError(error, 4, "Failed to fetch project keys");
-        const projectError: ProjectError = {
-          projectSlug: slug,
-          url: `https://app.circleci.com/settings/project/${slug}/ssh`,
+        printAxiosError(error, 2);
+        errors.push({
           error: createMinimalAxiosError(error),
+          projectSlug: slug,
+          url: `${CircleCI.endpoint.private}/project/${projectMeta.id}`,
+        });
+        const project: CircleCIAPIPrivateProject = {
+          project_env_vars: [],
+          checkout_keys: [],
+          ssh_keys: [],
+          legacy_aws_keys: {
+            access_key_id: "",
+            secret_access_key: "",
+          },
         };
-        errors.push(projectError);
-        return [];
+        return {
+          data: project,
+        };
       });
-    const legacyAWSKeys = await this.getLegacyAWSKeys(slug).catch((e) => {
-      const error = getAxiosError(e);
 
-      printAxiosError(error, 4, "Failed to fetch legacy AWS keys");
-      const projectError: ProjectError = {
-        projectSlug: slug,
-        url: `https://app.circleci.com/settings/project/${slug}/`,
-        error: createMinimalAxiosError(error),
-      };
-      errors.push(projectError);
-      return undefined;
-    });
     const project: CircleCIProject = {
-      ...data,
-      variables: variables,
-      keys: projectKeys,
+      errors,
+      ...projectMeta,
+      ...projectSecrets,
     };
-    if (legacyAWSKeys) {
-      project.legacyAWSKeys = legacyAWSKeys;
-    }
-    if (errors.length > 0) {
-      project.errors = errors;
-    }
     return project;
-  }
-  async getProjectVariables(
-    slug: string
-  ): Promise<CircleCIAPIProjectVariable[]> {
-    const variables = await this._getPaginated<CircleCIAPIProjectVariable>(
-      `${CircleCI.endpoint.v2}/project/${slug}/envvar`
-    );
-    printMessage(`${variables.length}`, "Variables found:", 4);
-    return variables;
   }
 
   async getProjects(orgID: string) {
@@ -208,14 +173,6 @@ export class CircleCI {
       projects.push(project);
     }
     return projects;
-  }
-
-  async getProjectKeys(slug: string): Promise<CircleCIAPIProjectCheckoutKey[]> {
-    const keys = await this._getPaginated<CircleCIAPIProjectCheckoutKey>(
-      `${CircleCI.endpoint.v2}/project/${slug}/checkout-key`
-    );
-    printMessage(`${keys.length}`, "Keys found:", 4);
-    return keys;
   }
 
   getContextUrl(slug: string, contextID: string) {
@@ -281,8 +238,8 @@ export type CircleCIAPIUser = {
   id: string;
   avatar_url: string;
 };
-export type VCS_TYPE = "github" | "bitbucket" | "circleci";
-export type CircleCIPaginatedAPIResponse<T> = {
+type VCS_TYPE = "github" | "bitbucket" | "circleci";
+type CircleCIPaginatedAPIResponse<T> = {
   items: T[];
   next_page_token: string;
 };
@@ -293,39 +250,32 @@ export type CircleCIAPICollaboration = {
   avatar_url: string;
   slug: string;
 };
-export type CircleCIAPIContext = {
+type CircleCIAPIContext = {
   id: string;
   name: string;
   created_at: string;
 };
-export interface CircleCIContext extends CircleCIAPIContext {
+interface CircleCIContext extends CircleCIAPIContext {
   url: string;
   variables: CircleCIAPIContextVariable[];
 }
-export type CircleCIAPIContextVariable = {
+type CircleCIAPIContextVariable = {
   variable: string;
   context_id: string;
   created_at: string;
   updated_at: string;
 };
-export type CircleCIAPIProjectVariable = {
+type CircleCIAPIProjectVariable = {
   name: string;
   value: string;
 };
-export type CircleCIAPIProjectCheckoutKey = {
-  type: "deploy-key" | "github-user-key";
-  preferred: string;
-  created_at: string;
-  public_key: string;
-  fingerprint: string;
-};
-export type CircleCIAPIRepo = {
+type CircleCIAPIRepo = {
   id: string;
   name: string;
   slug: string;
   has_trigger: boolean;
 };
-export type CircleCIAPIProject = {
+type CircleCIAPIProject = {
   slug: string;
   name: string;
   id: string;
@@ -338,21 +288,34 @@ export type CircleCIAPIProject = {
     default_branch: string;
   };
 };
-export type CircleCIProject = {
+// An internally created API to more easily fetch project secrets
+type CircleCIAPIPrivateProject = {
+  project_env_vars: CircleCIAPIProjectVariable[];
+  checkout_keys: CircleCIProjectCheckoutKey[];
+  ssh_keys: CircleCIProjectSSHKey[];
+  legacy_aws_keys?: CircleCILegacyAWSKeyPair;
+};
+interface CircleCIProject extends CircleCIAPIPrivateProject {
   id: string;
   name: string;
   slug: string;
-  variables: CircleCIAPIProjectVariable[];
-  keys: CircleCIAPIProjectCheckoutKey[];
-  legacyAWSKeys?: CircleCILegacyAWSKeyPair;
   errors?: ProjectError[];
+}
+
+type CircleCIProjectCheckoutKey = {
+  created_at: string;
+  fingerprint: string;
+  preferred: boolean;
+  public_key: string;
+  type: "deploy-key" | "github-user-key";
 };
-export type CircleCICollabData = {
-  name: string;
-  slug: string;
-  contexts: CircleCIContext[];
-  projects: CircleCIProject[];
+
+type CircleCIProjectSSHKey = {
+  fingerprint: string;
+  hostname: string;
+  public_key: string;
 };
+
 export type CircleCIEnvInspectorReport = {
   user: CircleCIAPIUser;
   accounts: CircleCIAccountReport[];
@@ -365,25 +328,19 @@ export type CircleCIAccountReport = {
   projects: CircleCIProject[];
   errors: unknown[];
 };
-export type CircleCIAPIv1ProjectSettings = {
-  aws: {
-    keypair: CircleCILegacyAWSKeyPair;
-  };
-  vcstype: VCS_TYPE;
-  slack_webhook_url: string;
-};
-export type CircleCILegacyAWSKeyPair = {
+
+type CircleCILegacyAWSKeyPair = {
   access_key_id: string;
   secret_access_key: string;
 };
 
-export type ContextVariableError = {
+type ContextVariableError = {
   contextName: string;
   url: string;
   error: AxiosErrorMinimal;
 };
 
-export type ProjectError = {
+type ProjectError = {
   projectSlug: string;
   url: string;
   error: AxiosErrorMinimal;
