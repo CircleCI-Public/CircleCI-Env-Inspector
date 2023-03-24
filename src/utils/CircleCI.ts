@@ -85,7 +85,7 @@ export class CircleCI {
     // return repos;
     const pagedData: CircleCIAPIRepo[] = [];
     const intersection: CircleCIAPIRepo[] = [];
-    const url = `${CircleCI.endpoint.private}/project?organization-id=${orgID}`;
+    const url = `${CircleCI.endpoint.private}/project?organization-id=${orgID}&include-deleted=true`;
     let pageToken;
     do {
       const remote: string = pageToken ? `${url}&page-token=${pageToken}` : url;
