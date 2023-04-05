@@ -112,32 +112,21 @@ export class CircleCI {
     return pagedData;
   }
 
-  async getProject(slug: string): Promise<CircleCIProject> {
+  async getProject(repo: CircleCIAPIRepo): Promise<CircleCIProject> {
     const errors: ProjectError[] = [];
-    const { data: projectMeta } = await this._client
-      .get<CircleCIAPIProject>(`${CircleCI.endpoint.v2}/project/${slug}`)
-      .catch((e) => {
-        const error = getAxiosError(e);
-        printAxiosError(error, 2);
-        errors.push({
-          error: createMinimalAxiosError(error),
-          projectSlug: slug,
-          url: `${CircleCI.endpoint.v2}/project/${slug}`,
-        });
-        throw error;
-      });
     const { data: projectSecrets } = await this._client
       .get<CircleCIAPIPrivateProject>(
-        `${CircleCI.endpoint.private}/project/${projectMeta.id}?include-deleted=true`
+        `${CircleCI.endpoint.private}/project/${repo.id}?include-deleted=true`
       )
       .catch((e) => {
         const error = getAxiosError(e);
         printAxiosError(error, 2);
         errors.push({
           error: createMinimalAxiosError(error),
-          projectSlug: slug,
-          url: `${CircleCI.endpoint.private}/project/${projectMeta.id}`,
+          projectSlug: repo.slug,
+          url: `${CircleCI.endpoint.private}/project/${repo.id}`,
         });
+
         const project: CircleCIAPIPrivateProject = {
           project_env_vars: [],
           checkout_keys: [],
@@ -147,6 +136,7 @@ export class CircleCI {
             secret_access_key: "",
           },
         };
+
         return {
           data: project,
         };
@@ -154,7 +144,7 @@ export class CircleCI {
 
     const project: CircleCIProject = {
       errors,
-      ...projectMeta,
+      ...repo,
       ...projectSecrets,
     };
     return project;
@@ -169,7 +159,7 @@ export class CircleCI {
         "Fetching project details for:",
         2
       );
-      const project = await this.getProject(repos[i].slug);
+      const project = await this.getProject(repos[i]);
       projects.push(project);
     }
     return projects;
@@ -274,19 +264,6 @@ type CircleCIAPIRepo = {
   name: string;
   slug: string;
   has_trigger: boolean;
-};
-type CircleCIAPIProject = {
-  slug: string;
-  name: string;
-  id: string;
-  organization_name: string;
-  organization_id: string;
-  organization_slug: string;
-  vcs_info: {
-    vcs_url: string;
-    provider: VCS_TYPE;
-    default_branch: string;
-  };
 };
 // An internally created API to more easily fetch project secrets
 type CircleCIAPIPrivateProject = {
