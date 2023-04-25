@@ -160,6 +160,12 @@ export class CircleCI {
         2
       );
       try {
+        const sleepInput = process.env.CCI_ENV_INSPECTOR_DELAY || "0";
+        const sleepTime = parseInt(sleepInput);
+        if (sleepTime > 0) {
+          console.log(`  Sleeping for ${sleepTime}ms`);
+          await new Promise((resolve) => setTimeout(resolve, sleepTime));
+        }
         const project = await this.getProject(repos[i]);
         projects.push(project);
       } catch (e: unknown) {

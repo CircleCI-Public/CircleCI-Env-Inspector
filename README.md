@@ -159,3 +159,7 @@ This tool is useful for auditing your personal access. To fully audit an organiz
 ### Q: Can I request a feature?
 
 A: **Yes.** Please open an issue or PR!
+
+### Q: I was rate limited, what should I do?
+
+A: Making many connections over a long period of time can lead to network errors and rate limiting. If you want to intentionally slow down the rate of fetching projects, you can set the `CCI_ENV_INSPECTOR_DELAY` environment variable to set the number of milliseconds between each request. The default is 0ms, if you experience any issues, try setting this between 200ms and 1000ms.
