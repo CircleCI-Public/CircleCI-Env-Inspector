@@ -183,9 +183,9 @@ export class CircleCI {
                 projectSlug: repos[i].slug,
                 error: {
                   message: "Failed to fetch project",
-                  status: 0,
-                  code: `${e.name} ${e.message}`,
-                  statusText: "Internal Server Error",
+                  status: 500,
+                  code: `${e.name}`,
+                  statusText: `${e.message}`,
                   url: `https://circleci.com/${repos[i].slug}`,
                 },
               },
