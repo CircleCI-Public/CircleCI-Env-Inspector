@@ -159,8 +159,44 @@ export class CircleCI {
         "Fetching project details for:",
         2
       );
-      const project = await this.getProject(repos[i]);
-      projects.push(project);
+      try {
+        const sleepInput = process.env.CCI_ENV_INSPECTOR_DELAY || "0";
+        const sleepTime = parseInt(sleepInput);
+        if (sleepTime > 0) {
+          console.log(`  Sleeping for ${sleepTime}ms`);
+          await new Promise((resolve) => setTimeout(resolve, sleepTime));
+        }
+        const project = await this.getProject(repos[i]);
+        projects.push(project);
+      } catch (e: unknown) {
+        if (e instanceof Error) {
+          const erroredProject: CircleCIProject = {
+            checkout_keys: [],
+            ssh_keys: [],
+            project_env_vars: [],
+            id: repos[i].id,
+            name: repos[i].name,
+            slug: repos[i].slug,
+            errors: [
+              {
+                url: `https://circleci.com/${repos[i].slug}`,
+                projectSlug: repos[i].slug,
+                error: {
+                  message: "Failed to fetch project",
+                  status: 500,
+                  code: `${e.name}`,
+                  statusText: `${e.message}`,
+                  url: `https://circleci.com/${repos[i].slug}`,
+                },
+              },
+            ],
+          };
+          projects.push(erroredProject);
+        } else {
+          console.log(`Unknown error fetching project ${repos[i].slug}:`);
+          console.dir(e, { depth: null });
+        }
+      }
     }
     return projects;
   }
