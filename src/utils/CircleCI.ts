@@ -197,8 +197,8 @@ export class CircleCI {
           console.dir(e, { depth: null });
         }
       }
-      return projects;
     }
+    return projects;
   }
 
   getContextUrl(slug: string, contextID: string) {
