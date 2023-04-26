@@ -1,10 +1,10 @@
 import { printError, printMessage, printWarning } from "../src/utils/Utils";
-import { jest } from "@jest/globals";
 import stripAnsi from "strip-ansi";
+import { describe, it, expect, vi } from 'vitest'
 
 describe("printMessage", () => {
   it("should call console.log with the correct message", () => {
-    const spy = jest.spyOn(console, "log");
+    const spy = vi.spyOn(console, "log");
     printMessage("Hello world", "Message", 2);
     expect(stripAnsi(spy.mock.calls[0][0])).toEqual("  Message Hello world");
     spy.mockRestore();
@@ -13,7 +13,7 @@ describe("printMessage", () => {
 
 describe("printWarning", () => {
   it("should call console.warn with the correct message", () => {
-    const spy = jest.spyOn(console, "warn");
+    const spy = vi.spyOn(console, "warn");
     printWarning("A warning occurred", 2);
     expect(stripAnsi(spy.mock.calls[0][0])).toEqual(
       "  Warning: A warning occurred"
@@ -24,7 +24,7 @@ describe("printWarning", () => {
 
 describe("printError", () => {
   it("should call console.error with the correct message", () => {
-    const spy = jest.spyOn(console, "error");
+    const spy = vi.spyOn(console, "error");
     printError("An error occurred", "Error", 2);
     expect(stripAnsi(spy.mock.calls[0][0])).toEqual(
       "  Error An error occurred"
